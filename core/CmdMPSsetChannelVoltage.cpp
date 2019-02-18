@@ -46,7 +46,9 @@ uint8_t own::CmdMPSsetChannelVoltage::implementedHandler(){
 void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
-	SCLAPP_ << "Set Handler setChannelVoltage "; 
+	this->kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
+	SCLAPP_ << "Set Handler setChannelVoltage ";
+	setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelClear); 
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	if(!data || !data->hasKey(CMD_MPS_SETCHANNELVOLTAGE_SLOT))
 	{
@@ -90,20 +92,29 @@ void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdMPSsetChannelVoltage::acquireHandler() {
 	SCLDBG_ << "Acquire Handler setChannelVoltage "; 
-	if (AbstractMultiChannelPowerSupplyCommand::outputRead() != 0 )
-	
+	if (this->kindofGenerator == 2)
 	{
-		//if (isAVoltageGenerator())
-		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
-		BC_FAULT_RUNNING_PROPERTY
-		return;
+		if (AbstractMultiChannelPowerSupplyCommand::outputRead() != 0 )
+		
+		{
+			//if (isAVoltageGenerator())
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			BC_FAULT_RUNNING_PROPERTY
+			return;
+		}
 	}
 
 
 }
 // empty correlation handler
 void own::CmdMPSsetChannelVoltage::ccHandler() {
+	if (this->kindofGenerator != 2)
+	{
+		BC_END_RUNNING_PROPERTY
+	}
+
+
 	int chanToMonitor=this->getProgressiveChannel(this->tmp_slot,this->tmp_channel);
 	if (chanToMonitor < 0)
 	{
@@ -115,6 +126,7 @@ void own::CmdMPSsetChannelVoltage::ccHandler() {
 
 	}
 	double readValue= chVoltages[chanToMonitor];
+	SCLDBG_ << "ALEDEBUG " << readValue << "set value " << this->tmp_voltage << "resolution " << (*this->resolution) ;
 	if ((this->resolution==NULL) || (fabs(readValue - this->tmp_voltage) < (*this->resolution)))
 	{
 		BC_END_RUNNING_PROPERTY;
