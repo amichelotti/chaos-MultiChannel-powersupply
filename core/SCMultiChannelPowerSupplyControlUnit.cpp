@@ -237,6 +237,11 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 							"1 if it drives current. 2 if it drives Voltages 0 to suppress any check over voltage and current",
 							DataType::TYPE_INT32,
 							DataType::Input);
+	addAttributeToDataSet("SetResolution",
+							"Resolution of the setting parameter",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
+							
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"default driver communication error");
 	

@@ -41,7 +41,7 @@ namespace driver {
 			void ccHandler();
 			void setHandler(c_data::CDataWrapper *data);
 			void setWorkState(bool working);
-			void outputRead();
+			int32_t outputRead();
 			double* chVoltages;
 			double* chCurrents;
 			int64_t* chStatus;

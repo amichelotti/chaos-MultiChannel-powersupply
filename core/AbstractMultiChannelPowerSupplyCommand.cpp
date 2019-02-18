@@ -73,7 +73,7 @@ void AbstractMultiChannelPowerSupplyCommand::ccHandler() {
 void AbstractMultiChannelPowerSupplyCommand::setWorkState(bool working_flag) {
 	setBusyFlag(working_flag);
 }
-void AbstractMultiChannelPowerSupplyCommand::outputRead() {
+int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 	std::string deviceString;
 	int ret;
 	//SCLDBG_ <<"Launching UpdateHV";
@@ -81,6 +81,7 @@ void AbstractMultiChannelPowerSupplyCommand::outputRead() {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		return ret;
 	}
 	else
 	{
@@ -92,6 +93,7 @@ void AbstractMultiChannelPowerSupplyCommand::outputRead() {
 		if (!json_reader.parse(deviceString, json_parameter))
 		{
 			CMDCUERR_ << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
+			return -1;
 		}
 		else
 		{
@@ -108,7 +110,7 @@ void AbstractMultiChannelPowerSupplyCommand::outputRead() {
 					metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Unknown format data  from PowerSupply");
 					setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 					BC_FAULT_RUNNING_PROPERTY
-					return;
+					return -1;
 				}
 
 
@@ -152,6 +154,7 @@ void AbstractMultiChannelPowerSupplyCommand::outputRead() {
 		}
 	}
 	getAttributeCache()->setOutputDomainAsChanged();
+	return 0;
 }
 std::string AbstractMultiChannelPowerSupplyCommand::getTypeOfAuxParam(std::string par)
 {

@@ -45,6 +45,7 @@ uint8_t own::CmdMPSsetChannelVoltage::implementedHandler(){
 // empty set handler
 void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
+	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
 	SCLAPP_ << "Set Handler setChannelVoltage "; 
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	if(!data || !data->hasKey(CMD_MPS_SETCHANNELVOLTAGE_SLOT))
@@ -89,21 +90,43 @@ void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdMPSsetChannelVoltage::acquireHandler() {
 	SCLDBG_ << "Acquire Handler setChannelVoltage "; 
-	AbstractMultiChannelPowerSupplyCommand::outputRead();
-	//if (isAVoltageGenerator())
+	if (AbstractMultiChannelPowerSupplyCommand::outputRead() != 0 )
+	
 	{
-		//for (int i=0; i < )
-		//double readValue= chVoltages[]
+		//if (isAVoltageGenerator())
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		BC_FAULT_RUNNING_PROPERTY
+		return;
 	}
 
 
 }
 // empty correlation handler
 void own::CmdMPSsetChannelVoltage::ccHandler() {
-	BC_END_RUNNING_PROPERTY;
+	int chanToMonitor=this->getProgressiveChannel(this->tmp_slot,this->tmp_channel);
+	if (chanToMonitor < 0)
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"command setChannelVoltage bad channel monitoring" );
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+		setWorkState(false);
+		BC_FAULT_RUNNING_PROPERTY
+		return;
+
+	}
+	double readValue= chVoltages[chanToMonitor];
+	if ((this->resolution==NULL) || (fabs(readValue - this->tmp_voltage) < (*this->resolution)))
+	{
+		BC_END_RUNNING_PROPERTY;
+	}
+	
 }
 // empty timeout handler
 bool own::CmdMPSsetChannelVoltage::timeoutHandler() {
 	SCLDBG_ << "Timeout Handler setChannelVoltage "; 
+
+	SCLERR_ << "[metric] Setpoint not reached setting channel "<< this->tmp_channel <<" timeout  "  << " in " << " milliseconds";
+    setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+	BC_END_RUNNING_PROPERTY
 	return false;
 }
