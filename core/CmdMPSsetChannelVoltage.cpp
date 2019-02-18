@@ -92,7 +92,7 @@ void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdMPSsetChannelVoltage::acquireHandler() {
 	SCLDBG_ << "Acquire Handler setChannelVoltage "; 
-	if (this->kindofGenerator == 2)
+	if (*this->kindOfGenerator == 2)
 	{
 		if (AbstractMultiChannelPowerSupplyCommand::outputRead() != 0 )
 		
@@ -109,7 +109,7 @@ void own::CmdMPSsetChannelVoltage::acquireHandler() {
 }
 // empty correlation handler
 void own::CmdMPSsetChannelVoltage::ccHandler() {
-	if (this->kindofGenerator != 2)
+	if (*this->kindOfGenerator != 2)
 	{
 		BC_END_RUNNING_PROPERTY
 	}
