@@ -103,6 +103,72 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 	multichannelpowersupply_drv->getChannelParametersDescription(auxiliaryParams);
 	Json::Value json_parameter;
   	Json::Reader json_reader;
+	
+
+	addAttributeToDataSet("presentSlotNumber",
+							"a string with the present slots",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+	addAttributeToDataSet("channelsPerSlot",
+							"a string with the channels of each slot",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+	addAttributeToDataSet("otherAvailableChannelParams",
+							"a string with the complemementary parameters that can be set on the driver",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+	
+	addAttributeToDataSet("otherChannelParamsToShow",
+							"a string with the name of the complementary parameters that user want to be pushed on output",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+
+	addAttributeToDataSet("status_id",
+							"default status attribute",
+							DataType::TYPE_INT32,
+							DataType::Output);
+	addAttributeToDataSet("alarms",
+							"default alarms attribute",
+							DataType::TYPE_INT64,
+							DataType::Output);
+	addBinaryAttributeAsSubtypeToDataSet("ChannelVoltages",
+							"the voltage readout",
+							chaos::DataType::SUB_TYPE_DOUBLE,
+							numOfChannels*sizeof(double),
+							chaos::DataType::Output);
+	addBinaryAttributeAsSubtypeToDataSet("ChannelCurrents",
+							"the current readout",
+							chaos::DataType::SUB_TYPE_DOUBLE,
+							numOfChannels*sizeof(double),
+							chaos::DataType::Output);
+	addBinaryAttributeAsSubtypeToDataSet("ChannelStatus",
+							"the status mask for each channel",
+							chaos::DataType::SUB_TYPE_INT64,
+							numOfChannels*sizeof(int64_t),
+							chaos::DataType::Output);
+
+	addBinaryAttributeAsSubtypeToDataSet("ChannelAlarms",
+							"the alarm mask for each channel",
+							chaos::DataType::SUB_TYPE_INT64,
+							numOfChannels*sizeof(int64_t),
+							chaos::DataType::Output);
+
+
+
+
+	addAttributeToDataSet("driver_timeout",
+							"Driver timeout in milliseconds",
+							DataType::TYPE_INT32,
+							DataType::Input);
+	addAttributeToDataSet("GeneratorBehaviour",
+							"1 if it drives current. 2 if it drives Voltages 0 to suppress any check over voltage and current",
+							DataType::TYPE_INT32,
+							DataType::Input);
+	addAttributeToDataSet("SetResolution",
+							"Resolution of the setting parameter",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
+
 	if (!json_reader.parse(auxiliaryParams, json_parameter))
 	{
 		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << auxiliaryParams;
@@ -182,66 +248,15 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			}
 
 		}
-		
+
 
 
 	}
 
-	addAttributeToDataSet("presentSlotNumber",
-							"a string with the present slots",
-							DataType::TYPE_STRING,
-							DataType::Output, 256);
-	addAttributeToDataSet("channelsPerSlot",
-							"a string with the channels of each slot",
-							DataType::TYPE_STRING,
-							DataType::Output, 256);
-	addAttributeToDataSet("otherAvailableChannelParams",
-							"a string with the complemementary parameters that can be set on the driver",
-							DataType::TYPE_STRING,
-							DataType::Output, 256);
-	
-	addAttributeToDataSet("otherChannelParamsToShow",
-							"a string with the name of the complementary parameters that user want to be pushed on output",
-							DataType::TYPE_STRING,
-							DataType::Output, 256);
 
-	addAttributeToDataSet("status_id",
-							"default status attribute",
-							DataType::TYPE_INT32,
-							DataType::Output);
-	addAttributeToDataSet("alarms",
-							"default alarms attribute",
-							DataType::TYPE_INT64,
-							DataType::Output);
-	addBinaryAttributeAsSubtypeToDataSet("ChannelVoltages",
-							"the voltage readout",
-							chaos::DataType::SUB_TYPE_DOUBLE,
-							numOfChannels*sizeof(double),
-							chaos::DataType::Output);
-	addBinaryAttributeAsSubtypeToDataSet("ChannelCurrents",
-							"the current readout",
-							chaos::DataType::SUB_TYPE_DOUBLE,
-							numOfChannels*sizeof(double),
-							chaos::DataType::Output);
-	addBinaryAttributeAsSubtypeToDataSet("ChannelStatus",
-							"the status mask for each channel",
-							chaos::DataType::SUB_TYPE_INT64,
-							numOfChannels*sizeof(int64_t),
-							chaos::DataType::Output);
 
-	addAttributeToDataSet("driver_timeout",
-							"Driver timeout in milliseconds",
-							DataType::TYPE_INT32,
-							DataType::Input);
-	addAttributeToDataSet("GeneratorBehaviour",
-							"1 if it drives current. 2 if it drives Voltages 0 to suppress any check over voltage and current",
-							DataType::TYPE_INT32,
-							DataType::Input);
-	addAttributeToDataSet("SetResolution",
-							"Resolution of the setting parameter",
-							DataType::TYPE_DOUBLE,
-							DataType::Input);
-							
+
+
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
 		"default driver communication error");
 	

@@ -52,7 +52,7 @@ void own::CmdMPSDefault::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdMPSDefault::acquireHandler() {
 	AbstractMultiChannelPowerSupplyCommand::outputRead();
-	SCLDBG_ << "o_alarms: " << *o_alarms;
+	//SCLDBG_ << "o_alarms: " << *o_alarms;
 }
 // empty correlation handler
 void own::CmdMPSDefault::ccHandler() {

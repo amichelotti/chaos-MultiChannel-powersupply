@@ -36,10 +36,11 @@ void AbstractMultiChannelPowerSupplyCommand::setHandler(c_data::CDataWrapper *da
 	CMDCUDBG_ << "loading pointer for output channel"; 
 	//get pointer to the output dataset variable
 	o_status_id = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT, "status_id");
-	o_alarms = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "alarms"); 
+	//o_alarms = getAttributeCache()->getRWPtr<uint64_t>(DOMAIN_OUTPUT, "alarms"); 
 	chVoltages=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"ChannelVoltages");
 	chCurrents=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"ChannelCurrents");
 	chStatus=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"ChannelStatus");
+	chAlarms=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"ChannelAlarms");
 	paramToShow=getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "otherChannelParamsToShow");
 	auxiliaryAvailable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"otherAvailableChannelParams");
 	const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
@@ -48,6 +49,8 @@ void AbstractMultiChannelPowerSupplyCommand::setHandler(c_data::CDataWrapper *da
 		setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) (*userTimeout)*1000);
 	else
 		setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 10000000);
+
+
 	chaos::cu::driver_manager::driver::DriverAccessor *multichannelpowersupply_accessor = driverAccessorsErogator->getAccessoInstanceByIndex(0);
 	if(multichannelpowersupply_accessor != NULL) {
 		if(multichannelpowersupply_drv == NULL) {
@@ -77,6 +80,7 @@ void AbstractMultiChannelPowerSupplyCommand::ccHandler() {
 void AbstractMultiChannelPowerSupplyCommand::setWorkState(bool working_flag) {
 	setBusyFlag(working_flag);
 }
+
 int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 	std::string deviceString;
 	int ret;
@@ -97,6 +101,9 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 		if (!json_reader.parse(deviceString, json_parameter))
 		{
 			CMDCUERR_ << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Invalid JSON from PowerSupply");
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			BC_FAULT_RUNNING_PROPERTY
 			return -1;
 		}
 		else
@@ -108,10 +115,11 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 				const Json::Value &json_attribute_VMon = (*it)["VMon"];
 				const Json::Value &json_attribute_IMon = (*it)["IMon"];
 				const Json::Value &json_attribute_status = (*it)["status"];
-				if (json_attribute_VMon.isNull() || (json_attribute_IMon.isNull()) || (json_attribute_status.isNull())		)
+				const Json::Value &json_attribute_alarm = (*it)["alarm"];
+				if (json_attribute_VMon.isNull() || (json_attribute_IMon.isNull()) || (json_attribute_status.isNull()) || (json_attribute_alarm.isNull())		)
 				{
 					CMDCUERR_ << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
-					metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Unknown format data  from PowerSupply");
+					metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError, JSON_FORMAT);
 					setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 					BC_FAULT_RUNNING_PROPERTY
 					return -1;
@@ -124,6 +132,7 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 				chVoltages[count]=VMon;
 				chCurrents[count]=IMon;
 				chStatus[count]=status;
+				chAlarms[count]=json_attribute_alarm.asInt64();
 				for (int i=0;i < auxParamList.size();i++)
 				{
 					const Json::Value &tmpJson = (*it)[auxParamList[i]];

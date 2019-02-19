@@ -33,7 +33,7 @@ namespace driver {
 		protected: 
 			//common members
 			int32_t	*o_status_id;
-			uint64_t	*o_alarms;
+			//uint64_t	*o_alarms;
 			//reference of the chaos abstraction of driver
 			chaos::driver::multichannelpowersupply::ChaosMultiChannelPowerSupplyInterface *multichannelpowersupply_drv;
 			//implemented handler
@@ -45,6 +45,7 @@ namespace driver {
 			double* chVoltages;
 			double* chCurrents;
 			int64_t* chStatus;
+			int64_t* chAlarms;
 			const char* paramToShow;
 			char* auxiliaryAvailable;
 			std::vector<std::string> auxParamList;
@@ -52,7 +53,8 @@ namespace driver {
 		public:
 			std::string getTypeOfAuxParam(std::string par);
 			int32_t getProgressiveChannel(int32_t slot, int32_t channel);
-
+			#define  JSON_FORMAT "UpdateHW must return  a JSON VECTOR string  with a component for each channel. Each component is an object with at least the following key: \
+			VMon (double), IMon (double), status (int64_t), alarm(int64_t)"
 		};// AbstractMultiChannelPowerSupplyCommand
 	}// multichannelpowersupply
 }
