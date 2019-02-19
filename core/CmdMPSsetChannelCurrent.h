@@ -19,6 +19,7 @@ limitations under the License.
 #ifndef __MultiChannelPowerSupply__CmdMPSsetChannelCurrent_h__
 #define __MultiChannelPowerSupply__CmdMPSsetChannelCurrent_h__
 #include "AbstractMultiChannelPowerSupplyCommand.h"
+#include <common/MultiChannelPowerSupply/core/AbstractMultiChannelPowerSupply.h>
 #include <bitset>
 namespace c_data = chaos::common::data;
 namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
@@ -35,6 +36,11 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
+			int32_t tmp_slot;
+			int32_t tmp_channel;
+			double  tmp_current;
+			const double *resolution;
+			const int32_t *kindOfGenerator;
 		};
 	}
 }

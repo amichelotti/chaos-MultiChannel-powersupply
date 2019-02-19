@@ -42,8 +42,12 @@ void AbstractMultiChannelPowerSupplyCommand::setHandler(c_data::CDataWrapper *da
 	chStatus=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"ChannelStatus");
 	paramToShow=getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "otherChannelParamsToShow");
 	auxiliaryAvailable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"otherAvailableChannelParams");
-	//setting default timeout (usec) 
-	setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 10000000);
+	const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
+	//setting default timeout (usec)
+	if (*userTimeout > 0)
+		setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) (*userTimeout)*1000);
+	else
+		setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 10000000);
 	chaos::cu::driver_manager::driver::DriverAccessor *multichannelpowersupply_accessor = driverAccessorsErogator->getAccessoInstanceByIndex(0);
 	if(multichannelpowersupply_accessor != NULL) {
 		if(multichannelpowersupply_drv == NULL) {

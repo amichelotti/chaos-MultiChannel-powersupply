@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "CmdMPSsetChannelVoltage.h"
-
+#include <common/MultiChannelPowerSupply/core/AbstractMultiChannelPowerSupply.h>
 #include <cmath>
 #include  <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -48,7 +48,10 @@ void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
 	this->kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
 	SCLAPP_ << "Set Handler setChannelVoltage ";
-	setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelClear); 
+	if (::common::multichannelpowersupply::MPS_CURRENT_GENERATOR != (*this->kindOfGenerator))
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelClear); 
+	}
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	if(!data || !data->hasKey(CMD_MPS_SETCHANNELVOLTAGE_SLOT))
 	{
@@ -92,7 +95,7 @@ void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdMPSsetChannelVoltage::acquireHandler() {
 	SCLDBG_ << "Acquire Handler setChannelVoltage "; 
-	if (*this->kindOfGenerator == 2)
+	if (*this->kindOfGenerator == ::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)
 	{
 		if (AbstractMultiChannelPowerSupplyCommand::outputRead() != 0 )
 		
@@ -109,7 +112,7 @@ void own::CmdMPSsetChannelVoltage::acquireHandler() {
 }
 // empty correlation handler
 void own::CmdMPSsetChannelVoltage::ccHandler() {
-	if (*this->kindOfGenerator != 2)
+	if (*this->kindOfGenerator != ::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)
 	{
 		BC_END_RUNNING_PROPERTY
 	}
@@ -126,8 +129,8 @@ void own::CmdMPSsetChannelVoltage::ccHandler() {
 
 	}
 	double readValue= chVoltages[chanToMonitor];
-	SCLDBG_ << "ALEDEBUG " << readValue << "set value " << this->tmp_voltage << "resolution " << (*this->resolution) ;
-	if ((this->resolution==NULL) || (fabs(readValue - this->tmp_voltage) < (*this->resolution)))
+	//SCLDBG_ << "ALEDEBUG " << readValue << "set value " << this->tmp_voltage << "resolution " << (*this->resolution) ;
+	if ((this->resolution==NULL) || (fabs(readValue - this->tmp_voltage) <= (*this->resolution)))
 	{
 		BC_END_RUNNING_PROPERTY;
 	}
@@ -137,7 +140,7 @@ void own::CmdMPSsetChannelVoltage::ccHandler() {
 bool own::CmdMPSsetChannelVoltage::timeoutHandler() {
 	SCLDBG_ << "Timeout Handler setChannelVoltage "; 
 
-	SCLERR_ << "[metric] Setpoint not reached setting channel "<< this->tmp_channel <<" timeout  "  << " in " << " milliseconds";
+	SCLERR_ << "[metric] Setpoint not reached setting on channel "<< this->tmp_channel <<" slot  "  << this->tmp_slot << " at value " << this->tmp_voltage;
     setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelWarning);
 	BC_END_RUNNING_PROPERTY
 	return false;

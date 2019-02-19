@@ -45,7 +45,14 @@ uint8_t own::CmdMPSsetChannelCurrent::implementedHandler(){
 // empty set handler
 void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
-	SCLAPP_ << "Set Handler setChannelCurrent "; 
+	SCLAPP_ << "Set Handler setChannelCurrent ";
+	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
+	this->kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
+
+	if (::common::multichannelpowersupply::MPSGeneratorBehaviour::MPS_VOLTAGE_GENERATOR != (*this->kindOfGenerator))
+	{
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelClear); 
+	}
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	if(!data || !data->hasKey(CMD_MPS_SETCHANNELCURRENT_SLOT))
 	{
@@ -55,7 +62,7 @@ void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY
 		return;
 	}
-	int32_t tmp_slot=data->getInt32Value(CMD_MPS_SETCHANNELCURRENT_SLOT);
+	tmp_slot=data->getInt32Value(CMD_MPS_SETCHANNELCURRENT_SLOT);
 
 	if(!data || !data->hasKey(CMD_MPS_SETCHANNELCURRENT_CHANNEL))
 	{
@@ -65,7 +72,7 @@ void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY
 		return;
 	}
-	int32_t tmp_channel=data->getInt32Value(CMD_MPS_SETCHANNELCURRENT_CHANNEL);
+	tmp_channel=data->getInt32Value(CMD_MPS_SETCHANNELCURRENT_CHANNEL);
 
 	if(!data || !data->hasKey(CMD_MPS_SETCHANNELCURRENT_CURRENT))
 	{
@@ -75,7 +82,7 @@ void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY
 		return;
 	}
-	double tmp_current=data->getDoubleValue(CMD_MPS_SETCHANNELCURRENT_CURRENT);
+	tmp_current=data->getDoubleValue(CMD_MPS_SETCHANNELCURRENT_CURRENT);
 
 	int err=0;
 	if ((err=multichannelpowersupply_drv->setChannelCurrent(tmp_slot,tmp_channel,tmp_current)) != 0)
@@ -89,13 +96,48 @@ void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdMPSsetChannelCurrent::acquireHandler() {
 	SCLDBG_ << "Acquire Handler setChannelCurrent "; 
+	if (*this->kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+	{
+		if (AbstractMultiChannelPowerSupplyCommand::outputRead() != 0 )
+		{
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			BC_FAULT_RUNNING_PROPERTY
+			return;
+		}
+	}
 }
+
+
 // empty correlation handler
 void own::CmdMPSsetChannelCurrent::ccHandler() {
-	BC_END_RUNNING_PROPERTY;
+	if (*this->kindOfGenerator != ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+	{
+		BC_END_RUNNING_PROPERTY
+	}
+
+	int chanToMonitor=this->getProgressiveChannel(this->tmp_slot,this->tmp_channel);
+	if (chanToMonitor < 0)
+	{
+		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"command setChannelVoltage bad channel monitoring" );
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+		setWorkState(false);
+		BC_FAULT_RUNNING_PROPERTY
+		return;
+
+	}
+	double readValue= this->chCurrents[chanToMonitor];
+	//SCLDBG_ << "ALEDEBUG " << readValue << "set value " << this->tmp_voltage << "resolution " << (*this->resolution) ;
+	if ((this->resolution==NULL) || (fabs(readValue - this->tmp_current) <= (*this->resolution)))
+	{
+		BC_END_RUNNING_PROPERTY;
+	}
 }
 // empty timeout handler
 bool own::CmdMPSsetChannelCurrent::timeoutHandler() {
 	SCLDBG_ << "Timeout Handler setChannelCurrent "; 
+	SCLERR_ << "[metric] Setpoint not reached setting on channel "<< this->tmp_channel <<" slot  "  << this->tmp_slot << " at value " << this->tmp_current;
+    setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelWarning);
+	BC_END_RUNNING_PROPERTY
 	return false;
 }

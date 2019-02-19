@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../../../../build-x86_64-Linux/libchaos_driver_multichannelpowersupply_MultiPSSim.a  CMakeFiles/chaos_driver_multichannelpowersupply_MultiPSSim.dir/MultiPSSimDD.cpp.o
-/usr/bin/ranlib ../../../../build-x86_64-Linux/libchaos_driver_multichannelpowersupply_MultiPSSim.a
