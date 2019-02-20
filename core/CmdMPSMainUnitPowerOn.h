@@ -1,5 +1,5 @@
 /*
-CmdMPSDefault.h
+CmdMPSMainUnitPowerOn.h
 !CHAOS
 Created by CUGenerator
 
@@ -16,15 +16,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-#ifndef __MultiChannelPowerSupply__CmdMPSDefault_h__
-#define __MultiChannelPowerSupply__CmdMPSDefault_h__
+#ifndef __MultiChannelPowerSupply__CmdMPSMainUnitPowerOn_h__
+#define __MultiChannelPowerSupply__CmdMPSMainUnitPowerOn_h__
 #include "AbstractMultiChannelPowerSupplyCommand.h"
 #include <bitset>
 namespace c_data = chaos::common::data;
 namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
 namespace driver {
 	namespace multichannelpowersupply {
-		DEFINE_BATCH_COMMAND_CLASS(CmdMPSDefault,AbstractMultiChannelPowerSupplyCommand) {
+		DEFINE_BATCH_COMMAND_CLASS(CmdMPSMainUnitPowerOn,AbstractMultiChannelPowerSupplyCommand) {
 			//implemented handler
 			uint8_t implementedHandler();
 			//initial set handler
@@ -35,10 +35,6 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
-			int32_t* o_status;
-			int64_t* o_alarms;
-			char *statusDescription, *alarmDescription;
-			
 		};
 	}
 }

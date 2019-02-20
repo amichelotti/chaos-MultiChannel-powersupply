@@ -47,6 +47,14 @@ namespace driver {
 		const char* const CMD_MPS_POWERON_SLOT = "slot";
 		const char* const CMD_MPS_POWERON_CHANNEL = "channel";
 		const char* const CMD_MPS_POWERON_ONSTATE = "onState";
+		const char* const CMD_MPS_MAINUNITPOWERON_ALIAS = "MainUnitPowerOn";
+		const char* const CMD_MPS_MAINUNITPOWERON_ON_STATE = "on_state";
+		const char* const CMD_MPS_GETMAINSTATUS_ALIAS = "getMainStatus";
+		const char* const CMD_MPS_GETMAINSTATUS_STATUS = "status";
+		const char* const CMD_MPS_GETMAINSTATUS_DESCR = "descr";
+		const char* const CMD_MPS_GETMAINALARMS_ALIAS = "getMainAlarms";
+		const char* const CMD_MPS_GETMAINALARMS_ALARMS = "alarms";
+		const char* const CMD_MPS_GETMAINALARMS_DESCR = "descr";
 		#define DEFAULT_COMMAND_TIMEOUT_MS   10000
 	}
 }

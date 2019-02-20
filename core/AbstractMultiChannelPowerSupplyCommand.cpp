@@ -50,7 +50,11 @@ void AbstractMultiChannelPowerSupplyCommand::setHandler(c_data::CDataWrapper *da
 	else
 		setFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT,(uint32_t) 10000000);
 
-
+	alreadyLoggedNotRetrieving=false;
+	alreadyLoggedWrongJSON=false;
+	alreadyLoggedJSONFormat=false;
+	alreadyLoggedUnknownFormatData=false;
+	alreadyLoggedAuxParamNotFound=false;
 	chaos::cu::driver_manager::driver::DriverAccessor *multichannelpowersupply_accessor = driverAccessorsErogator->getAccessoInstanceByIndex(0);
 	if(multichannelpowersupply_accessor != NULL) {
 		if(multichannelpowersupply_drv == NULL) {
@@ -87,7 +91,10 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 	//SCLDBG_ <<"Launching UpdateHV";
 	if ((ret=multichannelpowersupply_drv->UpdateHV(deviceString)) != 0)
 	{
-		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
+		if (!alreadyLoggedNotRetrieving)
+		{
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
+		}
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		return ret;
 	}
@@ -101,7 +108,10 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 		if (!json_reader.parse(deviceString, json_parameter))
 		{
 			CMDCUERR_ << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
-			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Invalid JSON from PowerSupply");
+			if (!alreadyLoggedWrongJSON)
+			{
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Invalid JSON from PowerSupply");
+			}
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 			BC_FAULT_RUNNING_PROPERTY
 			return -1;
@@ -119,7 +129,10 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 				if (json_attribute_VMon.isNull() || (json_attribute_IMon.isNull()) || (json_attribute_status.isNull()) || (json_attribute_alarm.isNull())		)
 				{
 					CMDCUERR_ << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
-					metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError, JSON_FORMAT);
+					if (!alreadyLoggedJSONFormat)
+					{
+						metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError, JSON_FORMAT);
+					}
 					setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 					BC_FAULT_RUNNING_PROPERTY
 					return -1;
@@ -166,6 +179,11 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 			}
 		}
 	}
+	alreadyLoggedNotRetrieving=false;
+	alreadyLoggedWrongJSON=false;
+	alreadyLoggedJSONFormat=false;
+	alreadyLoggedUnknownFormatData=false;
+	alreadyLoggedAuxParamNotFound=false;
 	getAttributeCache()->setOutputDomainAsChanged();
 	return 0;
 }
@@ -176,13 +194,15 @@ std::string AbstractMultiChannelPowerSupplyCommand::getTypeOfAuxParam(std::strin
 	  std::string retVal="";
 	if (!json_reader.parse(this->auxiliaryAvailable, json_parameter))
 	{
-		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Unknown format data  from auxiliary parameters of PowerSupply");
+		if (!alreadyLoggedUnknownFormatData)
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Unknown format data  from auxiliary parameters of PowerSupply");
 	}
 	else
 	{
 		if (json_parameter[par].isNull())
 		{
-			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,par+ " not found  in auxiliary parameters of PowerSupply");
+			if (!alreadyLoggedAuxParamNotFound)
+				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,par+ " not found  in auxiliary parameters of PowerSupply");
 		}
 		else
 		{

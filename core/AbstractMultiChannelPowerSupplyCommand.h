@@ -50,6 +50,11 @@ namespace driver {
 			char* auxiliaryAvailable;
 			std::vector<std::string> auxParamList;
 			std::vector<std::string> auxParamTypeList;
+			bool alreadyLoggedNotRetrieving;
+			bool alreadyLoggedWrongJSON;
+			bool alreadyLoggedJSONFormat;
+			bool alreadyLoggedUnknownFormatData;
+			bool alreadyLoggedAuxParamNotFound;
 		public:
 			std::string getTypeOfAuxParam(std::string par);
 			int32_t getProgressiveChannel(int32_t slot, int32_t channel);

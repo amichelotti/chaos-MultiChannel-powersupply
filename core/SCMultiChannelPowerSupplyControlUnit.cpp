@@ -27,6 +27,7 @@ limitations under the License.
 #include "CmdMPSsetChannelCurrent.h"
 #include "CmdMPSsetChannelParameter.h"
 #include "CmdMPSPowerOn.h"
+#include "CmdMPSMainUnitPowerOn.h"
 using namespace chaos;
 using namespace chaos::common::data;
 using namespace chaos::common::batch_command;
@@ -73,6 +74,7 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdMPSsetChannelCurrent));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdMPSsetChannelParameter));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdMPSPowerOn));
+	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdMPSMainUnitPowerOn));
 	chaos::cu::driver_manager::driver::DriverAccessor *multichannelpowersupply_accessor = getAccessoInstanceByIndex(0);
 	if (multichannelpowersupply_accessor == NULL ) {
 		throw chaos::CException(-1, "Cannot retrieve the requested driver", __FUNCTION__);
@@ -123,10 +125,18 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 							DataType::TYPE_STRING,
 							DataType::Output, 256);
 
+	addAttributeToDataSet("Main_Status_Description",
+							"a string with the description of the main unit status",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
 	addAttributeToDataSet("status_id",
 							"default status attribute",
 							DataType::TYPE_INT32,
 							DataType::Output);
+	addAttributeToDataSet("Main_Alarms_Description",
+							"a string with the description of the main unit alarms",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
 	addAttributeToDataSet("alarms",
 							"default alarms attribute",
 							DataType::TYPE_INT64,

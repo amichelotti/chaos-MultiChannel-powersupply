@@ -71,6 +71,18 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosMultiChannelPowerSupp
 			out->result=devicedriver->PowerOn(in->int32_t1,in->int32_t2,in->int32_t3);
 			ACDBG << "Sent to driver command PowerOn result is " << out->result;
 			} break;
+		case OP_MAINUNITPOWERON: {
+			out->result=devicedriver->MainUnitPowerOn(in->int32_t1);
+			ACDBG << "Sent to driver command MainUnitPowerOn result is " << out->result;
+			} break;
+		case OP_GETMAINSTATUS: {
+			out->result=devicedriver->getMainStatus(out->int32_tE1,out->stringE1);
+			ACDBG << "Sent to driver command getMainStatus result is " << out->result;
+			} break;
+		case OP_GETMAINALARMS: {
+			out->result=devicedriver->getMainAlarms(out->int64_tE1,out->stringE1);
+			ACDBG << "Sent to driver command getMainAlarms result is " << out->result;
+			} break;
 	}
 	return result;
 }

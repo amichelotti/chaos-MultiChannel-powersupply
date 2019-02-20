@@ -36,7 +36,10 @@ namespace chaos {
 				OP_SETCHANNELCURRENT,
 				OP_GETCHANNELPARAMETERSDESCRIPTION,
 				OP_SETCHANNELPARAMETER,
-				OP_POWERON
+				OP_POWERON,
+				OP_MAINUNITPOWERON,
+				OP_GETMAINSTATUS,
+				OP_GETMAINALARMS
 			} ChaosMultiChannelPowerSupplyOpcode;
 			typedef struct {
 				uint32_t timeout;
@@ -53,6 +56,8 @@ namespace chaos {
 				std::string  stringE1;
 				std::vector<int32_t>  vector_int32_t_E1;
 				std::vector<int32_t>  vector_int32_t_E2;
+				int32_t  int32_tE1;
+				int64_t  int64_tE1;
 			} multichannelpowersupply_oparams_t;
 			//wrapper interface
 			class ChaosMultiChannelPowerSupplyInterface:public ::common::multichannelpowersupply::AbstractMultiChannelPowerSupply {
@@ -68,6 +73,9 @@ namespace chaos {
 				int getChannelParametersDescription(std::string& outJSONString);
 				int setChannelParameter(int32_t slot,int32_t channel,std::string paramName,std::string paramValue);
 				int PowerOn(int32_t slot,int32_t channel,int32_t onState);
+				int MainUnitPowerOn(int32_t on_state);
+				int getMainStatus(int32_t& status,std::string& descr);
+				int getMainAlarms(int64_t& alarms,std::string& descr);
 			};
 		}
 	}//driver
