@@ -77,11 +77,11 @@ cu_driver::MsgManagmentResultType::MsgManagmentResult ChaosMultiChannelPowerSupp
 			} break;
 		case OP_GETMAINSTATUS: {
 			out->result=devicedriver->getMainStatus(out->int32_tE1,out->stringE1);
-			ACDBG << "Sent to driver command getMainStatus result is " << out->result;
+			
 			} break;
 		case OP_GETMAINALARMS: {
 			out->result=devicedriver->getMainAlarms(out->int64_tE1,out->stringE1);
-			ACDBG << "Sent to driver command getMainAlarms result is " << out->result;
+			
 			} break;
 	}
 	return result;
