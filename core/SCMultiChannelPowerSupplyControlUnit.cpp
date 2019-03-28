@@ -115,15 +115,7 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 							"a string with the channels of each slot",
 							DataType::TYPE_STRING,
 							DataType::Output, 256);
-	addAttributeToDataSet("otherAvailableChannelParams",
-							"a string with the complemementary parameters that can be set on the driver",
-							DataType::TYPE_STRING,
-							DataType::Output, 256);
 	
-	addAttributeToDataSet("otherChannelParamsToShow",
-							"a string with the name of the complementary parameters that user want to be pushed on output",
-							DataType::TYPE_STRING,
-							DataType::Output, 256);
 
 	addAttributeToDataSet("Main_Status_Description",
 							"a string with the description of the main unit status",
@@ -163,7 +155,15 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 							numOfChannels*sizeof(int64_t),
 							chaos::DataType::Output);
 
-
+	addAttributeToDataSet("otherAvailableChannelParams",
+							"a string with the complemementary parameters that can be set on the driver",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
+	
+	addAttributeToDataSet("otherChannelParamsToShow",
+							"a string with the name of the complementary parameters that user want to be pushed on output",
+							DataType::TYPE_STRING,
+							DataType::Output, 256);
 
 
 	addAttributeToDataSet("driver_timeout",
@@ -178,7 +178,17 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 							"Resolution of the setting parameter",
 							DataType::TYPE_DOUBLE,
 							DataType::Input);
+	
+	addAttributeToDataSet("MaxChannelSetValue",
+							"The maximum of the current OR voltage that could be accepted for a channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
 
+		addBinaryAttributeAsSubtypeToDataSet("ChannelSetValue",
+							"the set value imposed for current OR voltage",
+							chaos::DataType::SUB_TYPE_DOUBLE,
+							numOfChannels*sizeof(double),
+							chaos::DataType::Input);
 	if (!json_reader.parse(auxiliaryParams, json_parameter))
 	{
 		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << auxiliaryParams;
@@ -268,7 +278,9 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 
 	addStateVariable(StateVariableTypeAlarmCU,"driver_command_error",
-		"default driver communication error");
+		"last driver user command has failed");
+	addStateVariable(StateVariableTypeAlarmCU,"driver_reading_error",
+		"error occurred while reading data from driver");
 	
 	addStateVariable(StateVariableTypeAlarmCU,"auxiliary_parameter_configuration_error",
 		"raised when in configuration we ask to monitor an auxiliary parameter not existent or not convertible, or with wrong sintax");
@@ -314,6 +326,9 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 }
 // Abstract method for the start of the control unit
 void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStart() {
+		std::string deviceString;
+		int ret;
+		ret=multichannelpowersupply_drv->UpdateHV(deviceString);
 }
 // Abstract method for the stop of the control unit
 void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStop()  {

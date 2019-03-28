@@ -96,12 +96,12 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
 			alreadyLoggedNotRetrieving=true;
 		}
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_reading_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		return ret;
 	}
 	else
 	{
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_reading_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 
 		Json::Value json_parameter;
   		Json::Reader json_reader;

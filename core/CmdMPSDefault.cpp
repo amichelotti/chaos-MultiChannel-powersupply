@@ -66,7 +66,7 @@ void own::CmdMPSDefault::acquireHandler() {
 			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
 			alreadyLoggedNotRetrieving=true;
 		}
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_reading_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	else
 	{
@@ -84,7 +84,7 @@ void own::CmdMPSDefault::acquireHandler() {
 			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
 			alreadyLoggedNotRetrieving=true;
 		}
-		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_reading_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	else
 	{

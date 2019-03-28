@@ -56,6 +56,7 @@ namespace driver {
 			bool alreadyLoggedUnknownFormatData;
 			bool alreadyLoggedAuxParamNotFound;
 		public:
+			
 			std::string getTypeOfAuxParam(std::string par);
 			int32_t getProgressiveChannel(int32_t slot, int32_t channel);
 			#define  JSON_FORMAT "UpdateHW must return  a JSON VECTOR string  with a component for each channel. Each component is an object with at least the following key: \
