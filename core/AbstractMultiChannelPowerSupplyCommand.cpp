@@ -94,6 +94,7 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 		if (!alreadyLoggedNotRetrieving)
 		{
 			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," cannot retrieve data  from PowerSupply");
+			alreadyLoggedNotRetrieving=true;
 		}
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 		return ret;
@@ -111,6 +112,7 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 			if (!alreadyLoggedWrongJSON)
 			{
 				metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," Invalid JSON from PowerSupply");
+				alreadyLoggedWrongJSON=true;
 			}
 			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 			BC_FAULT_RUNNING_PROPERTY
@@ -132,6 +134,7 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 					if (!alreadyLoggedJSONFormat)
 					{
 						metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError, JSON_FORMAT);
+						alreadyLoggedJSONFormat=true;
 					}
 					setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 					BC_FAULT_RUNNING_PROPERTY
