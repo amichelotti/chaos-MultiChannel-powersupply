@@ -327,8 +327,48 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 // Abstract method for the start of the control unit
 void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStart() {
 		std::string deviceString;
+		const int32_t* kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"GeneratorBehaviour");
+		
 		int ret;
-		ret=multichannelpowersupply_drv->UpdateHV(deviceString);
+		if (*kindOfGenerator != ::common::multichannelpowersupply::MPS_NOT_SPECIFIED)
+		{
+			double* chVal=(*kindOfGenerator == ::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR) ? getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"ChannelVoltages") :  getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"ChannelCurrents") ;
+			double* inputVal=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,"ChannelSetValue");
+			if ((ret=multichannelpowersupply_drv->UpdateHV(deviceString)) == 0) 
+			{
+				Json::Value json_parameter;
+				Json::Reader json_reader;
+				//parse json string
+				if (!json_reader.parse(deviceString, json_parameter))
+				{
+					SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
+				}
+				else
+				{
+					int count=0;
+					for (Json::ValueIterator it = json_parameter.begin(); it != json_parameter.end(); it++)
+					{
+						const Json::Value &json_attribute_VMon = (*it)["VMon"];
+						const Json::Value &json_attribute_IMon = (*it)["IMon"];
+						if (json_attribute_VMon.isNull() || (json_attribute_IMon.isNull()) )
+						{
+							SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
+
+						}
+						else
+						{
+							double readVal=(*kindOfGenerator == ::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)? json_attribute_VMon.asDouble() : json_attribute_IMon.asDouble();
+							chVal[count]=readVal;
+							inputVal[count]=readVal;
+						}
+					++count;
+					}
+				}
+				getAttributeCache()->setOutputDomainAsChanged();
+				getAttributeCache()->setInputDomainAsChanged();
+			}//driver error received
+		}//unspecified kind of generator
+
 }
 // Abstract method for the stop of the control unit
 void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStop()  {

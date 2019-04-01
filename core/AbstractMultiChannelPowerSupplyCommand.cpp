@@ -262,3 +262,23 @@ int32_t AbstractMultiChannelPowerSupplyCommand::getProgressiveChannel(int32_t sl
 
 
 }
+uint32_t AbstractMultiChannelPowerSupplyCommand::getTotalChannels()
+{
+	const char* chanXSlot= getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "channelsPerSlot");
+	std::vector<int32_t> chanXSlotVector;
+	size_t current, next=-1;
+	std::string chanXSlotStr(chanXSlot);
+	do
+	{
+		current=next+1;
+		next=chanXSlotStr.find_first_of(" ",current);
+		std::string valueStr=chanXSlotStr.substr(current,next-current);
+		chanXSlotVector.push_back(atoi(valueStr.c_str()));
+	} while (next != std::string::npos);
+	int sum=0;
+	for (int i=0; i < chanXSlotVector.size(); i++)
+	{
+		sum+=chanXSlotVector[i];
+	}
+	return sum;
+}
