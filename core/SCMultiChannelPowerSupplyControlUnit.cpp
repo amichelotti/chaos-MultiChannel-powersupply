@@ -328,7 +328,60 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStart() {
 		std::string deviceString;
 		int ret;
-		ret=multichannelpowersupply_drv->UpdateHV(deviceString);
+		const int32_t* kindOfGen=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"GeneratorBehaviour");
+		double* inputSetVal=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,"ChannelSetValue");
+		if (*kindOfGen != ::common::multichannelpowersupply::MPS_NOT_SPECIFIED)
+		{
+			ret=multichannelpowersupply_drv->UpdateHV(deviceString);
+			Json::Value json_parameter;
+			Json::Reader json_reader;
+			//parse json string
+			if (!json_reader.parse(deviceString, json_parameter))
+			{
+				SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
+			}
+			else
+			{
+				int count=0;
+				//const Json::Value &dataset_description = json_parameter["attributes"];
+				for (Json::ValueIterator it = json_parameter.begin(); it != json_parameter.end(); it++)
+				{
+					const Json::Value &json_attribute_VMon = (*it)["VMon"];
+					const Json::Value &json_attribute_IMon = (*it)["IMon"];
+					
+					if (json_attribute_VMon.isNull() || (json_attribute_IMon.isNull()) )		
+					{
+						SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " <<deviceString;
+					}
+
+
+					
+					double ReadMon;
+					
+					double* outputValPointer;
+					if (*kindOfGen == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+					{
+						outputValPointer=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"ChannelCurrents");
+						ReadMon=json_attribute_IMon.asDouble();
+					}
+					else
+					{
+						outputValPointer=getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"ChannelVoltages");
+						ReadMon=json_attribute_VMon.asDouble();
+					}
+					outputValPointer[count]=ReadMon;
+					inputSetVal[count]=ReadMon;
+					++count;
+
+				}
+			}
+		}
+
+
+
+
+
+
 }
 // Abstract method for the stop of the control unit
 void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStop()  {
