@@ -91,16 +91,15 @@ void own::CmdMPSPowerOn::setHandler(c_data::CDataWrapper *data) {
 // empty acquire handler
 void own::CmdMPSPowerOn::acquireHandler() {
 	AbstractMultiChannelPowerSupplyCommand::outputRead();
-	SCLDBG_ << "Acquire Handler PowerOn "; 
+	
 }
 // empty correlation handler
 void own::CmdMPSPowerOn::ccHandler() {
-	
+	SCLDBG_ << "CC Handler PowerOn";
 	if (*kindOfGenerator != ::common::multichannelpowersupply::MPS_NOT_SPECIFIED)
 	{
 		if (tmp_onState == 1)
 		{
-			
 			double derivative;
 			int chanToMonitor=this->getProgressiveChannel(this->tmp_slot,this->tmp_channel);
 			if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
@@ -118,8 +117,8 @@ void own::CmdMPSPowerOn::ccHandler() {
 			}
 			else
 			{
-				
-				derivative=lastValue - chVoltages[chanToMonitor];
+				derivative=std::fabs(lastValue - chVoltages[chanToMonitor]);
+
 				if (derivative < (*this->resolution))
 				{
 					setVals[chanToMonitor]=chVoltages[chanToMonitor];
@@ -127,21 +126,16 @@ void own::CmdMPSPowerOn::ccHandler() {
 					getAttributeCache()->setOutputDomainAsChanged();
 					BC_END_RUNNING_PROPERTY;
 				}
-				else
+				else/* code */
 					lastValue=chVoltages[chanToMonitor];
 			}
-			
+			sleep(1);
 		}
 		else
 		{
 			BC_END_RUNNING_PROPERTY;
 		}
-		
 	}
-	//Se switch to ON set input value at the current value;
-
-	
-	
 }
 // empty timeout handler
 bool own::CmdMPSPowerOn::timeoutHandler() {
