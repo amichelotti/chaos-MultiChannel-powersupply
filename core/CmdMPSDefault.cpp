@@ -98,11 +98,12 @@ void own::CmdMPSDefault::acquireHandler() {
 	{
 		double * outputTocheck= (*kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)? chCurrents: chVoltages; 
 		double * inputTocheck=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,"ChannelSetValue");
+		//int64_t * statusTocheck=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"ChannelStatus");
 		bool raiseAlarm=false;
 		uint32_t end=this->getTotalChannels();
 		for (int i=0; i < end; i++)
 		{
-			if (std::fabs(outputTocheck[i] - inputTocheck[i]) > (*resolution)            )
+			if ( (std::fabs(outputTocheck[i] - inputTocheck[i]) > (*resolution)  ) && (CHECKMASK(chStatus[i],::common::powersupply::POWER_SUPPLY_STATE_ON) ) )
 			{
 				UPMASK(chStatus[i],::common::powersupply::POWER_SUPPLY_STATE_ALARM);
 				raiseAlarm=true;

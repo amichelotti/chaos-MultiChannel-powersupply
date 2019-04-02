@@ -46,10 +46,9 @@ uint8_t own::CmdMPSsetChannelCurrent::implementedHandler(){
 void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setChannelCurrent ";
-	this->setVals=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, "ChannelSetValue");
+	
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
-	this->kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
-
+	
 	if (::common::multichannelpowersupply::MPSGeneratorBehaviour::MPS_VOLTAGE_GENERATOR != (*this->kindOfGenerator))
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelClear); 
