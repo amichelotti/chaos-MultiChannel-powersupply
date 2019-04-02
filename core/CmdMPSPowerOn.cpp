@@ -46,6 +46,8 @@ uint8_t own::CmdMPSPowerOn::implementedHandler(){
 void own::CmdMPSPowerOn::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
 	SCLAPP_ << "Set Handler PowerOn "; 
+	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
+	lastValue=-99999;
 	setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelClear);
 	if(!data || !data->hasKey(CMD_MPS_POWERON_SLOT))
 	{
@@ -55,7 +57,7 @@ void own::CmdMPSPowerOn::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY
 		return;
 	}
-	int32_t tmp_slot=data->getInt32Value(CMD_MPS_POWERON_SLOT);
+	tmp_slot=data->getInt32Value(CMD_MPS_POWERON_SLOT);
 
 	if(!data || !data->hasKey(CMD_MPS_POWERON_CHANNEL))
 	{
@@ -65,7 +67,7 @@ void own::CmdMPSPowerOn::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY
 		return;
 	}
-	int32_t tmp_channel=data->getInt32Value(CMD_MPS_POWERON_CHANNEL);
+	 tmp_channel=data->getInt32Value(CMD_MPS_POWERON_CHANNEL);
 
 	if(!data || !data->hasKey(CMD_MPS_POWERON_ONSTATE))
 	{
@@ -75,7 +77,7 @@ void own::CmdMPSPowerOn::setHandler(c_data::CDataWrapper *data) {
 		BC_FAULT_RUNNING_PROPERTY
 		return;
 	}
-	int32_t tmp_onState=data->getInt32Value(CMD_MPS_POWERON_ONSTATE);
+	 tmp_onState=data->getInt32Value(CMD_MPS_POWERON_ONSTATE);
 
 	int err=0;
 	if ((err=multichannelpowersupply_drv->PowerOn(tmp_slot,tmp_channel,tmp_onState)) != 0)
@@ -88,11 +90,58 @@ void own::CmdMPSPowerOn::setHandler(c_data::CDataWrapper *data) {
 }
 // empty acquire handler
 void own::CmdMPSPowerOn::acquireHandler() {
+	AbstractMultiChannelPowerSupplyCommand::outputRead();
 	SCLDBG_ << "Acquire Handler PowerOn "; 
 }
 // empty correlation handler
 void own::CmdMPSPowerOn::ccHandler() {
-	BC_END_RUNNING_PROPERTY;
+	
+	if (*kindOfGenerator != ::common::multichannelpowersupply::MPS_NOT_SPECIFIED)
+	{
+		if (tmp_onState == 1)
+		{
+			
+			double derivative;
+			int chanToMonitor=this->getProgressiveChannel(this->tmp_slot,this->tmp_channel);
+			if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+			{
+				derivative=lastValue - chCurrents[chanToMonitor];
+				if (derivative < (*this->resolution))
+				{
+					setVals[chanToMonitor]=chCurrents[chanToMonitor];
+					getAttributeCache()->setInputDomainAsChanged();
+					getAttributeCache()->setOutputDomainAsChanged();
+					BC_END_RUNNING_PROPERTY;
+				}
+				else
+					lastValue=chCurrents[chanToMonitor];
+			}
+			else
+			{
+				
+				derivative=lastValue - chVoltages[chanToMonitor];
+				if (derivative < (*this->resolution))
+				{
+					setVals[chanToMonitor]=chVoltages[chanToMonitor];
+					getAttributeCache()->setInputDomainAsChanged();
+					getAttributeCache()->setOutputDomainAsChanged();
+					BC_END_RUNNING_PROPERTY;
+				}
+				else
+					lastValue=chVoltages[chanToMonitor];
+			}
+			
+		}
+		else
+		{
+			BC_END_RUNNING_PROPERTY;
+		}
+		
+	}
+	//Se switch to ON set input value at the current value;
+
+	
+	
 }
 // empty timeout handler
 bool own::CmdMPSPowerOn::timeoutHandler() {

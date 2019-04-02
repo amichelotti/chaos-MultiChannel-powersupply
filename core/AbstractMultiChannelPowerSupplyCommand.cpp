@@ -43,6 +43,9 @@ void AbstractMultiChannelPowerSupplyCommand::setHandler(c_data::CDataWrapper *da
 	chAlarms=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"ChannelAlarms");
 	paramToShow=getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "otherChannelParamsToShow");
 	auxiliaryAvailable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"otherAvailableChannelParams");
+	kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
+	setVals=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, "ChannelSetValue");
+
 	const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
 	//setting default timeout (usec)
 	if (*userTimeout > 0)

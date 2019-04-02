@@ -45,9 +45,9 @@ uint8_t own::CmdMPSsetChannelVoltage::implementedHandler(){
 // empty set handler
 void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
-	this->setVals=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, "ChannelSetValue");
+	
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
-	this->kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
+	
 	SCLAPP_ << "Set Handler setChannelVoltage ";
 	if (::common::multichannelpowersupply::MPS_CURRENT_GENERATOR != (*this->kindOfGenerator))
 	{

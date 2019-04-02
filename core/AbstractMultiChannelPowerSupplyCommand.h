@@ -44,8 +44,10 @@ namespace driver {
 			int32_t outputRead();
 			double* chVoltages;
 			double* chCurrents;
+			double* setVals;
 			int64_t* chStatus;
 			int64_t* chAlarms;
+			const int32_t* kindOfGenerator;
 			const char* paramToShow;
 			char* auxiliaryAvailable;
 			std::vector<std::string> auxParamList;
