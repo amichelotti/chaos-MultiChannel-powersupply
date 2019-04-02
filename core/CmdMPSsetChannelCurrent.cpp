@@ -46,6 +46,7 @@ uint8_t own::CmdMPSsetChannelCurrent::implementedHandler(){
 void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
 	SCLAPP_ << "Set Handler setChannelCurrent ";
+	this->setVals=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, "ChannelSetValue");
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
 	this->kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
 
@@ -89,6 +90,12 @@ void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setChannelCurrent not acknowledged");
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+	}
+	if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+	{
+		int chanToMonitor=this->getProgressiveChannel(this->tmp_slot,this->tmp_channel);
+		setVals[chanToMonitor]=this->tmp_current;
+		getAttributeCache()->setInputDomainAsChanged();
 	}
 	setWorkState(true);
 	BC_NORMAL_RUNNING_PROPERTY

@@ -40,6 +40,7 @@ namespace driver {
 			double  tmp_voltage;
 			const double *resolution;
 			const int32_t *kindOfGenerator;
+			double *setVals;
 		};
 	}
 }

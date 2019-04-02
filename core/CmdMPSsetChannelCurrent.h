@@ -36,6 +36,7 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
+			double *setVals;
 			int32_t tmp_slot;
 			int32_t tmp_channel;
 			double  tmp_current;
