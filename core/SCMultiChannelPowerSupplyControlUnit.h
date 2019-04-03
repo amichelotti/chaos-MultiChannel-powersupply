@@ -53,6 +53,7 @@ namespace driver {
 			std::string auxiliaryParams;
 			std::vector<std::string> auxiliaryParamsToPush;
 			bool raiseAuxiliaryParamError;
+			uint32_t getTotalChannels();
 		public:
 			/*Construct a new CU with an identifier*/
 			SCMultiChannelPowerSupplyControlUnit(const std::string& _control_unit_id,const std::string& _control_unit_param,const ControlUnitDriverList& _control_unit_drivers);

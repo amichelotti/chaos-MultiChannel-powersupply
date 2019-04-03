@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "SCMultiChannelPowerSupplyControlUnit.h"
+#include <common/powersupply/core/AbstractPowerSupply.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
 #include <common/debug/core/debug.h>
@@ -380,15 +381,109 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 	//! restore the control unit to snapshot
 #define RESTORE_LAPP SCCUAPP << "[RESTORE-" <<getCUID() << "] "
 #define RESTORE_LERR SCCUERR << "[RESTORE-" <<getCUID() << "] "
+#define RESTORE_LDBG SCCUDBG << "[RESTORE-" << getCUID() << "] "
 bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache *const snapshot_cache)  {
+	uint64_t start_restore_time= chaos::common::utility::TimingUtil::getTimeStamp();
+	try
+	{
+		int32_t* genKind = getAttributeCache()->getRWPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
+		if (snapshot_cache == NULL)
+		{
+			RESTORE_LERR << "cache nulla";
+			return false;
+		}
+		if (snapshot_cache->getSharedDomain(DOMAIN_INPUT).hasAttribute("SetResolution"))
+		{
+			double restore_channel_resolution = *snapshot_cache->getAttributeValue(DOMAIN_INPUT, "SetResolution")->getValuePtr<double>();
+			double* chanRes = getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, "SetResolution");
+			if (chanRes != NULL)
+			{
+				RESTORE_LDBG << "Restoring channel resolution";
+			    *chanRes=restore_channel_resolution;
+				getAttributeCache()->setInputDomainAsChanged();
+			}
+			{
+				RESTORE_LDBG << "NOT Restoring channel resolution because of null";
+			}
+		}
+		RESTORE_LDBG << "Restore Check if  cache for status_id";
+		if (!snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("status_id"))
+		{
+			RESTORE_LERR << " missing status_id to restore";
+			return false;
+		}
+		int32_t restore_power_sp = *snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "status_id")->getValuePtr<int32_t>();
+		RESTORE_LDBG << "Restore in cache status is " << restore_power_sp;
+		restore_power_sp=(int32_t)((restore_power_sp & ::common::powersupply::POWER_SUPPLY_STATE_ON) != 0);
+    	RESTORE_LDBG << "Restore Trying to set power at " << restore_power_sp;
+		multichannelpowersupply_drv->MainUnitPowerOn(restore_power_sp);
+
+
+		//check if in the restore cache we have all information we need
+		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelStatus"))
+		{
+			//double* chanStat = *snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus")->
+			//->getValuePtr<double>();
+			
+		}
+	}
+	catch (CException &ex)
+	{
+		uint64_t restore_duration_in_ms = chaos::common::utility::TimingUtil::getTimeStamp() - start_restore_time;
+		RESTORE_LERR << "[metric] Restore has fault in " << restore_duration_in_ms << " milliseconds";
+		throw ex;
+	}
 	return false;
 }
-bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::waitOnCommandID(uint64_t cmd_id) {
+uint32_t  ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getTotalChannels()
+{
+	const char* chanXSlot= getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "channelsPerSlot");
+	std::vector<int32_t> chanXSlotVector;
+	size_t current, next=-1;
+	std::string chanXSlotStr(chanXSlot);
+	do
+	{
+		current=next+1;
+		next=chanXSlotStr.find_first_of(" ",current);
+		std::string valueStr=chanXSlotStr.substr(current,next-current);
+		chanXSlotVector.push_back(atoi(valueStr.c_str()));
+	} while (next != std::string::npos);
+	int sum=0;
+	for (int i=0; i < chanXSlotVector.size(); i++)
+	{
+		sum+=chanXSlotVector[i];
+	}
+	return sum;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::waitOnCommandID(uint64_t cmd_id) 
+{
 	 ChaosUniquePtr<chaos::common::batch_command::CommandState> cmd_state;
 do { 
 cmd_state = getStateForCommandID(cmd_id);
 if (!cmd_state.get()) break;
-switch (cmd_state->last_event) {
+switch (cmd_state->last_event) 
+{
 case BatchCommandEventType::EVT_QUEUED:
 SCCUAPP << cmd_id << " -> QUEUED";
 break;
