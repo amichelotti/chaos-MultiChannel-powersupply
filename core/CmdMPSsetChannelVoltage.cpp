@@ -45,7 +45,8 @@ uint8_t own::CmdMPSsetChannelVoltage::implementedHandler(){
 // empty set handler
 void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
-	
+	maxSetValue=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "MaxChannelSetValue");
+	minSetValue=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "MinChannelSetValue");
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
 	
 	SCLAPP_ << "Set Handler setChannelVoltage ";
@@ -85,6 +86,28 @@ void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	tmp_voltage=data->getDoubleValue(CMD_MPS_SETCHANNELVOLTAGE_VOLTAGE);
 
 	int err=0;
+	if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)
+	{
+		if (tmp_voltage < *minSetValue)
+		{
+			SCLERR_ << "voltage to set lower than the minimum set in configuration";
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"voltage to set lower than the minimum set in configuration" );
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			setWorkState(false);
+			BC_FAULT_RUNNING_PROPERTY
+			return;
+		}
+		if ((*maxSetValue != 0) && (tmp_voltage > *maxSetValue))
+		{
+			SCLERR_ << "voltage to set higher than the maximum set in configuration";
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"voltage to set higher than the maximum set in configuration" );
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			setWorkState(false);
+			BC_FAULT_RUNNING_PROPERTY
+			return;
+
+		}
+	}
 	if ((err=multichannelpowersupply_drv->setChannelVoltage(tmp_slot,tmp_channel,tmp_voltage)) != 0)
 	{
 		metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError," command setChannelVoltage not acknowledged");

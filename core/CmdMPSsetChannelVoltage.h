@@ -39,6 +39,8 @@ namespace driver {
 			int32_t tmp_channel;
 			double  tmp_voltage;
 			const double *resolution;
+			const double *minSetValue;
+			const double *maxSetValue;
 			
 		};
 	}

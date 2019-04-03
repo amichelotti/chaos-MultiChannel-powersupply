@@ -184,6 +184,10 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 							"The maximum of the current OR voltage that could be accepted for a channel",
 							DataType::TYPE_DOUBLE,
 							DataType::Input);
+	addAttributeToDataSet("MinChannelSetValue",
+							"The minimum of the current OR voltage that could be accepted for a channel",
+							DataType::TYPE_DOUBLE,
+							DataType::Input);
 
 		addBinaryAttributeAsSubtypeToDataSet("ChannelSetValue",
 							"the set value imposed for current OR voltage",

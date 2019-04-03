@@ -41,6 +41,8 @@ namespace driver {
 			int32_t tmp_channel;
 			double  tmp_current;
 			const double *resolution;
+			const double *minSetValue;
+			const double *maxSetValue;
 			
 		};
 	}

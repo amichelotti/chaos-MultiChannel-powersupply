@@ -45,6 +45,8 @@ uint8_t own::CmdMPSsetChannelCurrent::implementedHandler(){
 // empty set handler
 void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
+	maxSetValue=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "MaxChannelSetValue");
+	minSetValue=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "MinChannelSetValue");
 	SCLAPP_ << "Set Handler setChannelCurrent ";
 	
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
@@ -83,7 +85,28 @@ void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 		return;
 	}
 	tmp_current=data->getDoubleValue(CMD_MPS_SETCHANNELCURRENT_CURRENT);
+	if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+	{
+		if (tmp_current < *minSetValue)
+		{
+			SCLERR_ << "current to set lower than the minimum set in configuration";
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"current to set lower than the minimum set in configuration" );
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			setWorkState(false);
+			BC_FAULT_RUNNING_PROPERTY
+			return;
+		}
+		if ((*maxSetValue != 0) && (tmp_current > *maxSetValue))
+		{
+			SCLERR_ << "current to set higher than the maximum set in configuration";
+			metadataLogging(chaos::common::metadata_logging::StandardLoggingChannel::LogLevelError,"current to set higher than the maximum set in configuration" );
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+			setWorkState(false);
+			BC_FAULT_RUNNING_PROPERTY
+			return;
 
+		}
+	}
 	int err=0;
 	if ((err=multichannelpowersupply_drv->setChannelCurrent(tmp_slot,tmp_channel,tmp_current)) != 0)
 	{
