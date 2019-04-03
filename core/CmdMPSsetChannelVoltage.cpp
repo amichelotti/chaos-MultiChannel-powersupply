@@ -45,8 +45,9 @@ uint8_t own::CmdMPSsetChannelVoltage::implementedHandler(){
 // empty set handler
 void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
+	
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
-	this->kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
+	
 	SCLAPP_ << "Set Handler setChannelVoltage ";
 	if (::common::multichannelpowersupply::MPS_CURRENT_GENERATOR != (*this->kindOfGenerator))
 	{
@@ -90,6 +91,12 @@ void own::CmdMPSsetChannelVoltage::setHandler(c_data::CDataWrapper *data) {
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"driver_command_error",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
 	}
 	setWorkState(true);
+	if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)
+	{
+		int chanToMonitor=this->getProgressiveChannel(this->tmp_slot,this->tmp_channel);
+		setVals[chanToMonitor]=this->tmp_voltage;
+		getAttributeCache()->setInputDomainAsChanged();
+	}
 	BC_NORMAL_RUNNING_PROPERTY
 }
 // empty acquire handler
@@ -129,6 +136,7 @@ void own::CmdMPSsetChannelVoltage::ccHandler() {
 
 	}
 	double readValue= chVoltages[chanToMonitor];
+	 
 	//SCLDBG_ << "ALEDEBUG " << readValue << "set value " << this->tmp_voltage << "resolution " << (*this->resolution) ;
 	if ((this->resolution==NULL) || (fabs(readValue - this->tmp_voltage) <= (*this->resolution)))
 	{

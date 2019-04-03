@@ -36,11 +36,12 @@ namespace driver {
 			void ccHandler();
 			//manage the timeout 
 			bool timeoutHandler();
+			
 			int32_t tmp_slot;
 			int32_t tmp_channel;
 			double  tmp_current;
 			const double *resolution;
-			const int32_t *kindOfGenerator;
+			
 		};
 	}
 }

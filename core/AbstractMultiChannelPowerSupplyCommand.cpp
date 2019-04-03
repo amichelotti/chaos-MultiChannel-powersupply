@@ -43,6 +43,9 @@ void AbstractMultiChannelPowerSupplyCommand::setHandler(c_data::CDataWrapper *da
 	chAlarms=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"ChannelAlarms");
 	paramToShow=getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "otherChannelParamsToShow");
 	auxiliaryAvailable=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"otherAvailableChannelParams");
+	kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT, "GeneratorBehaviour");
+	setVals=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT, "ChannelSetValue");
+
 	const int32_t *userTimeout=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"driver_timeout");
 	//setting default timeout (usec)
 	if (*userTimeout > 0)
@@ -261,4 +264,24 @@ int32_t AbstractMultiChannelPowerSupplyCommand::getProgressiveChannel(int32_t sl
 	}
 
 
+}
+uint32_t AbstractMultiChannelPowerSupplyCommand::getTotalChannels()
+{
+	const char* chanXSlot= getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "channelsPerSlot");
+	std::vector<int32_t> chanXSlotVector;
+	size_t current, next=-1;
+	std::string chanXSlotStr(chanXSlot);
+	do
+	{
+		current=next+1;
+		next=chanXSlotStr.find_first_of(" ",current);
+		std::string valueStr=chanXSlotStr.substr(current,next-current);
+		chanXSlotVector.push_back(atoi(valueStr.c_str()));
+	} while (next != std::string::npos);
+	int sum=0;
+	for (int i=0; i < chanXSlotVector.size(); i++)
+	{
+		sum+=chanXSlotVector[i];
+	}
+	return sum;
 }

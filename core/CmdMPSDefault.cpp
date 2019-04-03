@@ -17,7 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "CmdMPSDefault.h"
-
+#include <common/powersupply/core/AbstractPowerSupply.h>
 #include <cmath>
 #include  <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -44,8 +44,10 @@ void own::CmdMPSDefault::setHandler(c_data::CDataWrapper *data) {
 	AbstractMultiChannelPowerSupplyCommand::setHandler(data);
 	o_status=getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"status_id");
 	o_alarms=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"alarms");
+	kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"GeneratorBehaviour");
 	statusDescription=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"Main_Status_Description");
 	alarmDescription=getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT,"Main_Alarms_Description");
+	resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT,"SetResolution");
 
 	clearFeatures(chaos_batch::features::FeaturesFlagTypes::FF_SET_COMMAND_TIMEOUT);
 	setBusyFlag(false);
@@ -92,6 +94,35 @@ void own::CmdMPSDefault::acquireHandler() {
 		strncpy(alarmDescription,descrAlarm.c_str(),256);
 		alreadyLoggedNotRetrieving=false;
 	}
+	if (*kindOfGenerator != ::common::multichannelpowersupply::MPS_NOT_SPECIFIED)
+	{
+		double * outputTocheck= (*kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)? chCurrents: chVoltages; 
+		double * inputTocheck=getAttributeCache()->getRWPtr<double>(DOMAIN_INPUT,"ChannelSetValue");
+		//int64_t * statusTocheck=getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"ChannelStatus");
+		bool raiseAlarm=false;
+		uint32_t end=this->getTotalChannels();
+		for (int i=0; i < end; i++)
+		{
+			if ( (std::fabs(outputTocheck[i] - inputTocheck[i]) > (*resolution)  ) && (CHECKMASK(chStatus[i],::common::powersupply::POWER_SUPPLY_STATE_ON) ) )
+			{
+				UPMASK(chStatus[i],::common::powersupply::POWER_SUPPLY_STATE_ALARM);
+				raiseAlarm=true;
+			}
+		}
+		if (raiseAlarm)
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelHigh);
+
+		}
+		else
+		{
+			setStateVariableSeverity(StateVariableTypeAlarmCU,"channel_out_of_set",chaos::common::alarm::MultiSeverityAlarmLevelClear);
+
+		}
+
+		
+	}
+
 	
 }
 // empty correlation handler

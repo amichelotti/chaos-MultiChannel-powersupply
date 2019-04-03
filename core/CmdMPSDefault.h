@@ -38,6 +38,8 @@ namespace driver {
 			int32_t* o_status;
 			int64_t* o_alarms;
 			char *statusDescription, *alarmDescription;
+			const int32_t* kindOfGenerator;
+			const double* resolution;
 			
 		};
 	}
