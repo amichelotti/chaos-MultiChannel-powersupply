@@ -428,7 +428,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 		{
 			//double* chanStat = *snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus")->
 			//->getValuePtr<double>();
-			
+			//snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus");
 		}
 	}
 	catch (CException &ex)
@@ -532,3 +532,4 @@ inline std::string trim_copy(const std::string &s, const std::string& delimiters
 {
 	return trim_left_copy(trim_right_copy(s,delimiters),delimiters);
 }
+
