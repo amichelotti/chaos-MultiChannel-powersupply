@@ -425,10 +425,14 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 
 		//check if in the restore cache we have all information we need
+		RESTORE_LDBG << "Restore Check if  cache for channelStatus";
 		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelStatus"))
 		{
+			RESTORE_LDBG << "ALEDEBUG:Trying to get ChannelStatus";
 			CDataVariant chanStat = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus")->getAsVariant();
 			std::string readFromSnap=chanStat.asString();
+
+			RESTORE_LDBG << "ALEDEBUG:got ChannelStatus="<<readFromSnap;
 			//->getValuePtr<double>();
 			//snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus");
 		}
