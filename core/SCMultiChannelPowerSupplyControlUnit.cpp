@@ -438,7 +438,13 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			for (int i=0;i < arrLen; i++)
 			{
 				//uint64_t prova=readFromStnap
-				uint64_t machineUint = *reinterpret_cast<std::uint64_t*>(readFromSnap.c_str(), 8);
+				const int32_t PE_POINTER_OFFSET = 60;            
+    			const int32_t MACHINE_OFFSET = 4;
+				char* data=(char*)readFromSnap.c_str();
+				int32_t pe_header_offset = *reinterpret_cast<int32_t*>(data + PE_POINTER_OFFSET);
+
+       			uint64_t machineUint= *reinterpret_cast<uint64_t*>(data + pe_header_offset + MACHINE_OFFSET);
+				
 				RESTORE_LDBG << "ALEDEBUG: first value is: " <<machineUint;
 			}
 			//->getValuePtr<double>();
