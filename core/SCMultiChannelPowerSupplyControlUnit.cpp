@@ -432,7 +432,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			CDataVariant chanStat = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus")->getAsVariant();
 			std::string readFromSnap=chanStat.asString();
 
-			RESTORE_LDBG << "ALEDEBUG:got ChannelStatus="<<readFromSnap;
+			RESTORE_LDBG << "ALEDEBUG:got ChannelStatus="<<readFromSnap << "length"<<readFromSnap.length() ;
 			//->getValuePtr<double>();
 			//snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus");
 		}
