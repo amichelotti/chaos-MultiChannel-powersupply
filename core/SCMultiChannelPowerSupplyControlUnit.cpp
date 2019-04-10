@@ -406,6 +406,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			    *chanRes=restore_channel_resolution;
 				getAttributeCache()->setInputDomainAsChanged();
 			}
+			else
 			{
 				RESTORE_LDBG << "NOT Restoring channel resolution because of null";
 			}
@@ -426,7 +427,8 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 		//check if in the restore cache we have all information we need
 		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelStatus"))
 		{
-			//double* chanStat = *snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus")->
+			CDataVariant chanStat = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus")->getAsVariant();
+			std::string readFromSnap=chanStat.asString();
 			//->getValuePtr<double>();
 			//snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus");
 		}
