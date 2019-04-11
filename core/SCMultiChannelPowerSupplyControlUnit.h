@@ -48,12 +48,17 @@ namespace driver {
 			bool unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache * const snapshot_cache);
 			// handler declaration
 			//end handler declaration
+			std::vector<int>  slotsID;
+			std::vector<int>  channelsPerSlots;
 			std::string channelsPerSlotStr;
 			std::string idSlotPresent;
 			std::string auxiliaryParams;
 			std::vector<std::string> auxiliaryParamsToPush;
 			bool raiseAuxiliaryParamError;
 			uint32_t getTotalChannels();
+			size_t getLengthOfAuxParameter(std::string param,std::string &tipo);
+			std::string getParAsString(char* rawData,int arrayCount,std::string tipo);
+			bool getSlotAndChannel(int progressive, int& slot, int&chan);
 		public:
 			/*Construct a new CU with an identifier*/
 			SCMultiChannelPowerSupplyControlUnit(const std::string& _control_unit_id,const std::string& _control_unit_param,const ControlUnitDriverList& _control_unit_drivers);

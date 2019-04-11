@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "SCMultiChannelPowerSupplyControlUnit.h"
+#include <string>
 #include <common/powersupply/core/AbstractPowerSupply.h>
 #include <boost/format.hpp>
 #include <boost/lexical_cast.hpp>
@@ -84,8 +85,7 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 	if (multichannelpowersupply_drv == NULL) {
 		throw chaos::CException(-2, "Cannot allocate driver resources", __FUNCTION__);
 	}
-	std::vector<int>  slotsID;
-	std::vector<int>  channelsPerSlots;
+	
 	SCCUAPP << "Reading slot config" ;
 	if (multichannelpowersupply_drv->getSlotConfiguration(slotsID,channelsPerSlots) != 0)
 	{
@@ -423,6 +423,56 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
     	RESTORE_LDBG << "Restore Trying to set power at " << restore_power_sp;
 		multichannelpowersupply_drv->MainUnitPowerOn(restore_power_sp);
 
+		char* snapParameterToShow= snapshot_cache->getAttributeValue(DOMAIN_OUTPUT,"otherChannelParamsToShow")->getValuePtr<char>();
+		//RESTORE_LDBG << "Auxiliary restore param "<< snapParameterToShow;
+		std::string parToShowConverted=snapParameterToShow;
+		size_t current,next=-1;
+		do
+		{
+			current=next+1;
+			next=parToShowConverted.find_first_of(",",current);
+			std::string par=parToShowConverted.substr(current,next-current);
+			std::string trimmedPar=trim_copy(par);
+			std::string parType="";
+			size_t lenPar=getLengthOfAuxParameter(trimmedPar, parType);
+			if (lenPar == 0)
+			{
+				RESTORE_LERR << "Cannot restore "<<trimmedPar <<" unknown size";
+				return false;
+			}
+			std::string chanPar="Channel"+trimmedPar;
+			RESTORE_LDBG << "Auxiliary restore param "<< trimmedPar;
+			if (!snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute(chanPar))
+			{
+				RESTORE_LERR << "Cannot restore "<< chanPar <<" : not present in snapshot";
+				return false;
+			}
+			
+			CDataVariant chanStat = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, chanPar)->getAsVariant();
+			std::string readFromSnap=chanStat.asString();
+
+			RESTORE_LDBG << "ALEDEBUG: length "<<readFromSnap.length() ;
+			size_t arrLen=readFromSnap.length()/sizeof(int64_t);
+			char* data=(char*)readFromSnap.c_str();
+
+			uint64_t *machineUint= (uint64_t*)data;
+			for (int i=0;i < arrLen; i++)
+			{
+				std::string parVal=getParAsString(data,i,parType);	
+				//multichannelpowersupply_drv->setChannelParameter()
+				int slot, chan,ret=0;
+				if (this->getSlotAndChannel(i,slot,chan))
+				{
+					RESTORE_LDBG << "RESTORING: "<< trimmedPar <<" slot"<< slot << " chan "<<chan << "  value is: " <<parVal;
+					ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
+					sleep(1); //lento non dovrebbe crepare
+				}
+				
+			}
+
+
+		
+		} while (next != string::npos);
 
 		//check if in the restore cache we have all information we need
 		RESTORE_LDBG << "Restore Check if  cache for channelStatus";
@@ -437,15 +487,10 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			RESTORE_LDBG << "ALEDEBUG: that means array of "<< arrLen;
 			for (int i=0;i < arrLen; i++)
 			{
-				//uint64_t prova=readFromStnap
-				const int32_t PE_POINTER_OFFSET = 60;            
-    			const int32_t MACHINE_OFFSET = 4;
-				char* data=(char*)readFromSnap.c_str();
-				int32_t pe_header_offset = *reinterpret_cast<int32_t*>(data + PE_POINTER_OFFSET);
-
-       			uint64_t machineUint= *reinterpret_cast<uint64_t*>(data + pe_header_offset + MACHINE_OFFSET);
 				
-				RESTORE_LDBG << "ALEDEBUG: first value is: " <<machineUint;
+				char* data=(char*)readFromSnap.c_str();
+				uint64_t *machineUint= (uint64_t*)data;
+			//	RESTORE_LDBG << "ALEDEBUG:  value is: " <<machineUint[i];
 			}
 			//->getValuePtr<double>();
 			//snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus");
@@ -480,8 +525,109 @@ uint32_t  ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUni
 	return sum;
 }
 
+size_t ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getLengthOfAuxParameter(std::string param,std::string& tipo)
+{
+	size_t ret=0;
+	Json::Value json_parameter;
+  	Json::Reader json_reader;
+	if (!json_reader.parse(auxiliaryParams, json_parameter))
+	{
+		SCCUERR << "Bad Json parameter " << json_parameter <<" INPUT " << auxiliaryParams;
+		auxiliaryParams="";
+		this->raiseAuxiliaryParamError=true;
+	}
+	else
+	{
+		std::vector<std::string> listParam= json_parameter.getMemberNames();
+		for (int j=0; j < listParam.size(); j++)
+		{
+			SCCUDBG << "ALEDEBUG " << listParam[j];
+			if (listParam[j] == param)
+			{
+				std::string kindOf=json_parameter[listParam[j]].asString();
+				
+				if (kindOf == "double")
+				{
+					tipo="double";
+					return sizeof(double);
+				}
+				else if (kindOf == "float")
+				{
+					tipo="double";
+					return sizeof(double);
+				}
+				else if (kindOf == "int")
+				{
+					tipo="int32_t";
+					return sizeof(int32_t);
+				}
+				else if (kindOf.find("int64")>=0)
+				{
+					tipo="int64_t";
+					return sizeof(int64_t);
+				}
+				else if (kindOf.find("int32")>=0)
+				{
+					tipo="int32_t";
+					return  sizeof(int32_t);
+				}
+				else
+				{
+					tipo="";
+					return 0;
+				}
+				break;
+			}
+		}
+			
+	}
+	return 0;
+}
 
+namespace driver
+{
+	std::string      multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getParAsString(char* rawData,int arrayCount,std::string tipo)
+	{
+		std::string toRet;
+		stringstream vv ;
+		vv.str("");
+		if (tipo=="double")
+		{
+			double tmp=((double*)rawData)[arrayCount];
+			vv << tmp;
+		}
+		else if (tipo == "int32_t")
+		{
+			int32_t tmp=((int32_t*)rawData)[arrayCount];
+			vv << tmp;
+		}
+		else if (tipo == "int64_t")
+		{
+			int64_t tmp=((int64_t*)rawData)[arrayCount];
+			vv << tmp;
+		}
 
+		return vv.str();
+	}
+	bool  multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getSlotAndChannel(int progressive, int& slot, int&chan)
+	{
+		int prgCount =0;
+		for (int i= 0; i < this->slotsID.size();i++)
+		{
+			int32_t chanThisSlot=this->channelsPerSlots[i];
+			prgCount=i*chanThisSlot;
+			if ((progressive - prgCount) < chanThisSlot)
+			{
+				slot= this->slotsID[i];
+				chan = progressive - prgCount;
+				return true;
+			}
+
+		}
+
+		return false;
+	}
+}
 
 
 
