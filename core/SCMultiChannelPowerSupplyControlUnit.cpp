@@ -493,7 +493,9 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				if (this->getSlotAndChannel(i,slot,chan))
 				{
 					RESTORE_LDBG << "RESTORING: "<< "Voltages" <<" slot"<< slot << " chan "<<chan << "  value is: " << setValue;
-					ret+=multichannelpowersupply_drv->setChannelVoltage(slot,chan,setValue);
+					std::string outStr;
+					ret+=multichannelpowersupply_drv->getChannelParametersDescription(outStr);
+					//ret+=multichannelpowersupply_drv->setChannelVoltage(slot,chan,setValue);
 					sleep(1); //lento non dovrebbe crepare
 				
 				}
