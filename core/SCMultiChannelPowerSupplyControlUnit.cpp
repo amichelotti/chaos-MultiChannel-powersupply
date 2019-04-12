@@ -453,9 +453,9 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 			RESTORE_LDBG << "ALEDEBUG: length "<<readFromSnap.length() ;
 			size_t arrLen=readFromSnap.length()/sizeof(int64_t);
-			char* data=(char*)readFromSnap.c_str();
+			const char* data=readFromSnap.c_str();
 
-			uint64_t *machineUint= (uint64_t*)data;
+			
 			for (int i=0;i < arrLen; i++)
 			{
 				RESTORE_LDBG << "before getAsString "<< i <<" ";
@@ -465,17 +465,43 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				if (this->getSlotAndChannel(i,slot,chan))
 				{
 					RESTORE_LDBG << "RESTORING: "<< trimmedPar <<" slot"<< slot << " chan "<<chan << "  value is: " <<parVal;
-					ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
-					sleep(2); //lento non dovrebbe crepare
+					//ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
+					//sleep(2); //lento non dovrebbe crepare
 					RESTORE_LDBG << "after sleep "<< slot <<" " << chan;
 				}
 				
 			}
 
 
+
 		
 		} while (next != string::npos);
+		RESTORE_LDBG << "Restore Check if  cache for channelVoltages";
+		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelVoltages"))
+		{
+			CDataVariant chanVoltages = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelVoltages")->getAsVariant();
+			std::string readFromSnap=chanVoltages.asString();
+			RESTORE_LDBG << "ALEDEBUG:got ChannelVoltages length "<<readFromSnap.length() ;
+			size_t arrLen=readFromSnap.length()/sizeof(double);
+			char* data=(char*)readFromSnap.c_str();
+			int slot, chan,ret=0;
+			for (int i=0;i < arrLen; i++)
+			{
+				double setValue = ((double*)data)[i];
+				//stringstream ss;
+				//ss << setValue;
+				if (this->getSlotAndChannel(i,slot,chan))
+				{
+					RESTORE_LDBG << "RESTORING: "<< "Voltages" <<" slot"<< slot << " chan "<<chan << "  value is: " << setValue;
+					ret+=multichannelpowersupply_drv->setChannelVoltage(slot,chan,setValue);
+					sleep(1); //lento non dovrebbe crepare
+				
+				}
+				
+			}
+			
 
+		}
 		//check if in the restore cache we have all information we need
 		RESTORE_LDBG << "Restore Check if  cache for channelStatus";
 		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelStatus"))
@@ -486,7 +512,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 			RESTORE_LDBG << "ALEDEBUG:got ChannelStatus length "<<readFromSnap.length() ;
 			size_t arrLen=readFromSnap.length()/sizeof(int64_t);
-			RESTORE_LDBG << "ALEDEBUG: that means array of "<< arrLen;
+			
 			for (int i=0;i < arrLen; i++)
 			{
 				
@@ -588,7 +614,7 @@ size_t ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::
 
 namespace driver
 {
-	std::string      multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getParAsString(char* rawData,int arrayCount,std::string tipo)
+	std::string      multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getParAsString(const char* rawData,int arrayCount,std::string tipo)
 	{
 		std::string toRet;
 		stringstream vv ;

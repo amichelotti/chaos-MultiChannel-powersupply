@@ -57,7 +57,7 @@ namespace driver {
 			bool raiseAuxiliaryParamError;
 			uint32_t getTotalChannels();
 			size_t getLengthOfAuxParameter(std::string param,std::string &tipo);
-			std::string getParAsString(char* rawData,int arrayCount,std::string tipo);
+			std::string getParAsString(const char* rawData,int arrayCount,std::string tipo);
 			bool getSlotAndChannel(int progressive, int& slot, int&chan);
 		public:
 			/*Construct a new CU with an identifier*/
