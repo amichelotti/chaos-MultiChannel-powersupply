@@ -476,6 +476,8 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 		
 		} while (next != string::npos);
+
+
 		RESTORE_LDBG << "Restore Check if  cache for channelVoltages";
 		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelVoltages"))
 		{
@@ -501,29 +503,30 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				}
 				
 			}
-			
-
 		}
 		//check if in the restore cache we have all information we need
 		RESTORE_LDBG << "Restore Check if  cache for channelStatus";
 		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelStatus"))
 		{
-			RESTORE_LDBG << "ALEDEBUG:Trying to get ChannelStatus";
 			CDataVariant chanStat = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus")->getAsVariant();
 			std::string readFromSnap=chanStat.asString();
-
 			RESTORE_LDBG << "ALEDEBUG:got ChannelStatus length "<<readFromSnap.length() ;
 			size_t arrLen=readFromSnap.length()/sizeof(int64_t);
-			
+			char* data=(char*)readFromSnap.c_str();
+			int slot, chan,ret=0;
 			for (int i=0;i < arrLen; i++)
 			{
+				uint64_t theState= ((uint64_t*)data)[i];
+				if (this->getSlotAndChannel(i,slot,chan))
+				{
+					int val=(theState==2)? 1:0;
+					RESTORE_LDBG << "RESTORING: "<< "Status" <<" slot"<< slot << " chan "<<chan << "  value is: " << theState;
+					ret+=multichannelpowersupply_drv->PowerOn(slot,chan,val);
+					sleep(1);
+				}
 				
-				char* data=(char*)readFromSnap.c_str();
-				uint64_t *machineUint= (uint64_t*)data;
-			//	RESTORE_LDBG << "ALEDEBUG:  value is: " <<machineUint[i];
+
 			}
-			//->getValuePtr<double>();
-			//snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelStatus");
 		}
 	}
 	catch (CException &ex)
