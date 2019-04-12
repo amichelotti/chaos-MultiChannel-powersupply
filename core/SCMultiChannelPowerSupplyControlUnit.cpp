@@ -426,7 +426,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 		char* snapParameterToShow= snapshot_cache->getAttributeValue(DOMAIN_OUTPUT,"otherChannelParamsToShow")->getValuePtr<char>();
 		//RESTORE_LDBG << "Auxiliary restore param "<< snapParameterToShow;
 		std::string parToShowConverted=snapParameterToShow;
-/*		size_t current,next=-1;
+		size_t current,next=-1;
 		do
 		{
 			current=next+1;
@@ -464,6 +464,23 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				{
 					RESTORE_LDBG << "RESTORING: "<< trimmedPar <<" slot"<< slot << " chan "<<chan << "  value is: " <<parVal;
 					ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
+
+					std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
+  					cmd_pack->addInt32Value(CMD_MPS_SETCHANNELPARAMETER_SLOT, slot);
+					cmd_pack->addInt32Value(CMD_MPS_SETCHANNELPARAMETER_CHANNEL, chan);
+					cmd_pack->addStringValue(CMD_MPS_SETCHANNELPARAMETER_PARAMNAME,trimmedPar);
+					cmd_pack->addStringValue(CMD_MPS_SETCHANNELPARAMETER_PARAMVALUE,parVal);
+
+  //send command
+					submitBatchCommand(CMD_MPS_SETCHANNELPARAMETER_ALIAS,
+										cmd_pack.release(),
+										cmd_id,
+										0,
+										50,
+										SubmissionRuleType::SUBMIT_NORMAL);
+
+
+
 					sleep(1); //lento non dovrebbe crepare
 					RESTORE_LDBG << "after sleep "<< slot <<" " << chan;
 				}
@@ -473,10 +490,10 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 
 		
-		} while (next != string::npos);*/
+		} while (next != string::npos);
 
 
-		RESTORE_LDBG << "Restore Check if  cache for channelVoltages";
+		/*RESTORE_LDBG << "Restore Check if  cache for channelVoltages";
 		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelVoltages"))
 		{
 			CDataVariant chanVoltages = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelVoltages")->getAsVariant();
@@ -494,7 +511,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				{
 					RESTORE_LDBG << "RESTORING: "<< "Voltages" <<" slot"<< slot << " chan "<<chan << "  value is: " << setValue;
 					std::string outStr;
-					ret+=multichannelpowersupply_drv->getChannelParametersDescription(outStr);
+					//ret+=multichannelpowersupply_drv->getChannelParametersDescription(outStr);
 					//ret+=multichannelpowersupply_drv->setChannelVoltage(slot,chan,setValue);
 					usleep(300000); //lento non dovrebbe crepare
 				
@@ -525,7 +542,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				
 
 			}
-		}
+		}*/
 	}
 	catch (CException &ex)
 	{
