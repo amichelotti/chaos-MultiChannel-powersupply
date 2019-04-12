@@ -463,7 +463,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				if (this->getSlotAndChannel(i,slot,chan))
 				{
 					RESTORE_LDBG << "RESTORING: "<< trimmedPar <<" slot"<< slot << " chan "<<chan << "  value is: " <<parVal;
-					ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
+					//ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
 
 					std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
   					cmd_pack->addInt32Value(CMD_MPS_SETCHANNELPARAMETER_SLOT, slot);
