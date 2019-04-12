@@ -481,7 +481,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 
 
-					sleep(1); //lento non dovrebbe crepare
+					sleep(4); //lento non dovrebbe crepare
 					RESTORE_LDBG << "after sleep "<< slot <<" " << chan;
 				}
 				
