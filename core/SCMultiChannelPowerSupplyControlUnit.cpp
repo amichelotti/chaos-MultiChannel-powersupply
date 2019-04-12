@@ -426,7 +426,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 		char* snapParameterToShow= snapshot_cache->getAttributeValue(DOMAIN_OUTPUT,"otherChannelParamsToShow")->getValuePtr<char>();
 		//RESTORE_LDBG << "Auxiliary restore param "<< snapParameterToShow;
 		std::string parToShowConverted=snapParameterToShow;
-		size_t current,next=-1;
+/*		size_t current,next=-1;
 		do
 		{
 			current=next+1;
@@ -455,18 +455,16 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			size_t arrLen=readFromSnap.length()/sizeof(int64_t);
 			const char* data=readFromSnap.c_str();
 
-			
+			int slot, chan,ret=0;
 			for (int i=0;i < arrLen; i++)
 			{
 				RESTORE_LDBG << "before getAsString "<< i <<" ";
 				std::string parVal=getParAsString(data,i,parType);	
-				//multichannelpowersupply_drv->setChannelParameter()
-				int slot, chan,ret=0;
 				if (this->getSlotAndChannel(i,slot,chan))
 				{
 					RESTORE_LDBG << "RESTORING: "<< trimmedPar <<" slot"<< slot << " chan "<<chan << "  value is: " <<parVal;
-					//ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
-					//sleep(2); //lento non dovrebbe crepare
+					ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
+					sleep(1); //lento non dovrebbe crepare
 					RESTORE_LDBG << "after sleep "<< slot <<" " << chan;
 				}
 				
@@ -475,7 +473,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 
 		
-		} while (next != string::npos);
+		} while (next != string::npos);*/
 
 
 		RESTORE_LDBG << "Restore Check if  cache for channelVoltages";
@@ -498,7 +496,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 					std::string outStr;
 					ret+=multichannelpowersupply_drv->getChannelParametersDescription(outStr);
 					//ret+=multichannelpowersupply_drv->setChannelVoltage(slot,chan,setValue);
-					sleep(1); //lento non dovrebbe crepare
+					usleep(300000); //lento non dovrebbe crepare
 				
 				}
 				
