@@ -470,7 +470,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 					cmd_pack->addInt32Value(CMD_MPS_SETCHANNELPARAMETER_CHANNEL, chan);
 					cmd_pack->addStringValue(CMD_MPS_SETCHANNELPARAMETER_PARAMNAME,trimmedPar);
 					cmd_pack->addStringValue(CMD_MPS_SETCHANNELPARAMETER_PARAMVALUE,parVal);
-
+					uint64_t cmd_id;
   //send command
 					submitBatchCommand(CMD_MPS_SETCHANNELPARAMETER_ALIAS,
 										cmd_pack.release(),
