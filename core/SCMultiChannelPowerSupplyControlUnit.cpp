@@ -458,6 +458,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			uint64_t *machineUint= (uint64_t*)data;
 			for (int i=0;i < arrLen; i++)
 			{
+				RESTORE_LDBG << "before getAsString "<< i <<" ";
 				std::string parVal=getParAsString(data,i,parType);	
 				//multichannelpowersupply_drv->setChannelParameter()
 				int slot, chan,ret=0;
@@ -465,7 +466,8 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				{
 					RESTORE_LDBG << "RESTORING: "<< trimmedPar <<" slot"<< slot << " chan "<<chan << "  value is: " <<parVal;
 					ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
-					sleep(1); //lento non dovrebbe crepare
+					sleep(2); //lento non dovrebbe crepare
+					RESTORE_LDBG << "after sleep "<< slot <<" " << chan;
 				}
 				
 			}

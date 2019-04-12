@@ -47,6 +47,7 @@ idata.int32_t1=VAR_int32_t1;\
 idata.int32_t2=VAR_int32_t2;\
 idata.string1=VAR_string1;\
 idata.string2=VAR_string2;\
+DPRINT("ALEDEBUG:before accessor send");\
 accessor->send(&message);\
 return ret.result;
 
