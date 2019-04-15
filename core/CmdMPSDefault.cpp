@@ -60,6 +60,7 @@ void own::CmdMPSDefault::setHandler(c_data::CDataWrapper *data) {
 void own::CmdMPSDefault::acquireHandler() {
 	std::string descrStatus, descrAlarm;
 	int32_t tmp_status;
+	
 	AbstractMultiChannelPowerSupplyCommand::outputRead();
 	if (multichannelpowersupply_drv->getMainStatus(tmp_status,descrStatus) != 0)
 	{

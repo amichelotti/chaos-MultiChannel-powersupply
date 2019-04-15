@@ -464,22 +464,22 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				{
 					RESTORE_LDBG << "RESTORING: "<< trimmedPar <<" slot"<< slot << " chan "<<chan << "  value is: " <<parVal;
 					//ret+=multichannelpowersupply_drv->setChannelParameter(slot,chan,trimmedPar,parVal);
-
+					
 					std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
   					cmd_pack->addInt32Value(CMD_MPS_SETCHANNELPARAMETER_SLOT, slot);
 					cmd_pack->addInt32Value(CMD_MPS_SETCHANNELPARAMETER_CHANNEL, chan);
 					cmd_pack->addStringValue(CMD_MPS_SETCHANNELPARAMETER_PARAMNAME,trimmedPar);
 					cmd_pack->addStringValue(CMD_MPS_SETCHANNELPARAMETER_PARAMVALUE,parVal);
 					uint64_t cmd_id;
-  //send command
+  					//send command
 					submitBatchCommand(CMD_MPS_SETCHANNELPARAMETER_ALIAS,
 										cmd_pack.release(),
 										cmd_id,
 										0,
 										50,
 										SubmissionRuleType::SUBMIT_NORMAL);
-
-					sleep(2); //lento non dovrebbe crepare
+					
+					//sleep(2); //lento non dovrebbe crepare
 					
 				}
 				
@@ -490,11 +490,16 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 		
 		} while (next != string::npos);
 
-
-		/*RESTORE_LDBG << "Restore Check if  cache for channelVoltages";
-		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelVoltages"))
+		const int32_t *kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"GeneratorBehaviour");
+		if (*kindOfGenerator== ::common::multichannelpowersupply::MPS_NOT_SPECIFIED)
 		{
-			CDataVariant chanVoltages = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelVoltages")->getAsVariant();
+			RESTORE_LDBG << "Unknown type of generator. Restore finished";
+			return true;
+		}
+		RESTORE_LDBG << "Restore Check if  cache for ChannelSetValue";
+		if (snapshot_cache->getSharedDomain(DOMAIN_INPUT).hasAttribute("ChannelSetValue"))
+		{
+			CDataVariant chanVoltages = snapshot_cache->getAttributeValue(DOMAIN_INPUT, "ChannelSetValue")->getAsVariant();
 			std::string readFromSnap=chanVoltages.asString();
 			RESTORE_LDBG << "ALEDEBUG:got ChannelVoltages length "<<readFromSnap.length() ;
 			size_t arrLen=readFromSnap.length()/sizeof(double);
@@ -505,19 +510,132 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 				double setValue = ((double*)data)[i];
 				//stringstream ss;
 				//ss << setValue;
+				
 				if (this->getSlotAndChannel(i,slot,chan))
 				{
-					RESTORE_LDBG << "RESTORING: "<< "Voltages" <<" slot"<< slot << " chan "<<chan << "  value is: " << setValue;
+					RESTORE_LDBG << "RESTORING: "<< "main value" <<" slot"<< slot << " chan "<<chan << "  value is: " << setValue;
 					std::string outStr;
 					//ret+=multichannelpowersupply_drv->getChannelParametersDescription(outStr);
 					//ret+=multichannelpowersupply_drv->setChannelVoltage(slot,chan,setValue);
-					usleep(300000); //lento non dovrebbe crepare
+					std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
+					if (*kindOfGenerator==::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)
+					{
+ 						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELVOLTAGE_SLOT, slot);
+						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELVOLTAGE_CHANNEL, chan);
+						cmd_pack->addDoubleValue(CMD_MPS_SETCHANNELVOLTAGE_VOLTAGE,setValue);
+						uint64_t cmd_id;
+  						//send command
+						submitBatchCommand(CMD_MPS_SETCHANNELVOLTAGE_ALIAS,
+										cmd_pack.release(),
+										cmd_id,
+										0,
+										50,
+										SubmissionRuleType::SUBMIT_NORMAL);
+						//sleep(1); //lento non dovrebbe crepare
+					}
+					else if  (*kindOfGenerator==::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+					{
+ 						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELCURRENT_SLOT, slot);
+						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELCURRENT_CHANNEL, chan);
+						cmd_pack->addDoubleValue(CMD_MPS_SETCHANNELCURRENT_CURRENT,setValue);
+						uint64_t cmd_id;
+  						//send command
+						submitBatchCommand(CMD_MPS_SETCHANNELCURRENT_ALIAS,
+										cmd_pack.release(),
+										cmd_id,
+										0,
+										50,
+										SubmissionRuleType::SUBMIT_NORMAL);
+						//sleep(1); //lento non dovrebbe crepare
+					}
 				
 				}
 				
 			}
 		}
-		//check if in the restore cache we have all information we need
+		else
+		{
+			RESTORE_LERR << " missing set value to restore";
+			return false;
+
+		}
+		
+		//restoring the OTHER value
+		CDataVariant otherValue;
+		bool retrieved=false;
+		if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+		{
+			if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelVoltages"))
+			{
+				otherValue = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelVoltages")->getAsVariant();
+				retrieved=true;
+			}
+		}
+		else if (*kindOfGenerator == ::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)
+		{
+			if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelCurrents"))
+			{
+				otherValue = snapshot_cache->getAttributeValue(DOMAIN_OUTPUT, "ChannelVoltages")->getAsVariant();
+				retrieved=true;
+			}
+		}
+		if (retrieved)
+		{
+			std::string readFromSnap=otherValue.asString();
+			
+			size_t arrLen=readFromSnap.length()/sizeof(double);
+			char* data=(char*)readFromSnap.c_str();
+			int slot, chan,ret=0;
+			for (int i=0;i < arrLen; i++)
+			{
+				double setValue = ((double*)data)[i];
+				if (this->getSlotAndChannel(i,slot,chan))
+				{
+					RESTORE_LDBG << "RESTORING: "<< "" <<" slot"<< slot << " chan "<<chan << "  value is: " << setValue;
+					std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
+					if (*kindOfGenerator==::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR)
+					{
+ 						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELCURRENT_SLOT, slot);
+						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELCURRENT_CHANNEL, chan);
+						cmd_pack->addDoubleValue(CMD_MPS_SETCHANNELCURRENT_CURRENT,setValue);
+						uint64_t cmd_id;
+  						//send command
+						submitBatchCommand(CMD_MPS_SETCHANNELCURRENT_ALIAS,
+										cmd_pack.release(),
+										cmd_id,
+										0,
+										50,
+										SubmissionRuleType::SUBMIT_NORMAL);
+						//sleep(1); //lento non dovrebbe crepare
+					}
+					else if (*kindOfGenerator==::common::multichannelpowersupply::MPS_CURRENT_GENERATOR)
+					{
+						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELVOLTAGE_SLOT, slot);
+						cmd_pack->addInt32Value(CMD_MPS_SETCHANNELVOLTAGE_CHANNEL, chan);
+						cmd_pack->addDoubleValue(CMD_MPS_SETCHANNELVOLTAGE_VOLTAGE,setValue);
+						uint64_t cmd_id;
+  						//send command
+						submitBatchCommand(CMD_MPS_SETCHANNELVOLTAGE_ALIAS,
+										cmd_pack.release(),
+										cmd_id,
+										0,
+										50,
+										SubmissionRuleType::SUBMIT_NORMAL);
+						//sleep(1); //lento non dovrebbe crepare
+
+					}
+				}
+			}
+		}
+		else
+		{
+			RESTORE_LERR << " missing minor parameter  to restore. Ignoring";
+		}
+		
+
+
+
+
 		RESTORE_LDBG << "Restore Check if  cache for channelStatus";
 		if (snapshot_cache->getSharedDomain(DOMAIN_OUTPUT).hasAttribute("ChannelStatus"))
 		{
@@ -530,17 +648,32 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 			for (int i=0;i < arrLen; i++)
 			{
 				uint64_t theState= ((uint64_t*)data)[i];
+				std::auto_ptr<CDataWrapper> cmd_pack(new CDataWrapper());
 				if (this->getSlotAndChannel(i,slot,chan))
 				{
 					int val=(theState==2)? 1:0;
 					RESTORE_LDBG << "RESTORING: "<< "Status" <<" slot"<< slot << " chan "<<chan << "  value is: " << theState;
-					ret+=multichannelpowersupply_drv->PowerOn(slot,chan,val);
-					sleep(1);
+					cmd_pack->addInt32Value(CMD_MPS_POWERON_SLOT, slot);
+					cmd_pack->addInt32Value(CMD_MPS_POWERON_CHANNEL, chan);
+					cmd_pack->addInt32Value(CMD_MPS_POWERON_ONSTATE,val);
+					uint64_t cmd_id;
+  					//send command
+					submitBatchCommand(CMD_MPS_POWERON_ALIAS,
+										cmd_pack.release(),
+										cmd_id,
+										0,
+										50,
+										SubmissionRuleType::SUBMIT_NORMAL);
+					//sleep(1);
 				}
-				
-
 			}
-		}*/
+		}
+		else
+		{
+			RESTORE_LERR << " missing channel status to restore";
+			return false;
+		}
+		return true;
 	}
 	catch (CException &ex)
 	{
