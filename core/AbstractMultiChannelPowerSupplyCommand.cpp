@@ -73,8 +73,11 @@ void AbstractMultiChannelPowerSupplyCommand::setHandler(c_data::CDataWrapper *da
 		next=aCopy.find_first_of(",",current);
 		std::string par=aCopy.substr(current,next-current);
 		std::string typ=getTypeOfAuxParam(par);
-		auxParamTypeList.push_back(typ);
-		auxParamList.push_back(par);
+		if ((par != "") && (par != " ") && (par != "  "))
+		{
+			auxParamTypeList.push_back(typ);
+			auxParamList.push_back(par);
+		}
 	} while (next != std::string::npos);
 }
 // return the implemented handler
