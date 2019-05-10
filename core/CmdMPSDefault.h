@@ -19,7 +19,6 @@ limitations under the License.
 #ifndef __MultiChannelPowerSupply__CmdMPSDefault_h__
 #define __MultiChannelPowerSupply__CmdMPSDefault_h__
 #include "AbstractMultiChannelPowerSupplyCommand.h"
-#include <bitset>
 namespace c_data = chaos::common::data;
 namespace ccc_slow_command = chaos::cu::control_manager::slow_command;
 namespace driver {

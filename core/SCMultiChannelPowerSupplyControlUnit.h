@@ -21,7 +21,6 @@ limitations under the License.
 
 #include <chaos/cu_toolkit/control_manager/SCAbstractControlUnit.h>
 #include <driver/MultiChannelPowerSupply/core/ChaosMultiChannelPowerSupplyInterface.h>
-using namespace chaos;
 namespace driver {
 	namespace multichannelpowersupply {
 		

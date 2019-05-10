@@ -16,14 +16,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+#include <stdint.h>
 #include "SCMultiChannelPowerSupplyControlUnit.h"
-#include <string>
 #include <common/powersupply/core/AbstractPowerSupply.h>
-#include <boost/format.hpp>
-#include <boost/lexical_cast.hpp>
-#include <common/debug/core/debug.h>
-#include <chaos/common/data/CDataWrapper.h>
-#include <json/json.h>
+
 #include "CmdMPSDefault.h"
 #include "CmdMPSsetChannelVoltage.h"
 #include "CmdMPSsetChannelCurrent.h"
@@ -36,6 +32,7 @@ using namespace chaos::common::batch_command;
 using namespace chaos::cu::control_manager::slow_command;
 using namespace chaos::cu::driver_manager::driver;
 using namespace chaos::cu::control_manager;
+using namespace ::driver::multichannelpowersupply;
 #define SCCUAPP INFO_LOG(SCMultiChannelPowerSupplyControlUnit)
 #define SCCUDBG DBG_LOG(SCMultiChannelPowerSupplyControlUnit)
 #define SCCUERR ERR_LOG(SCMultiChannelPowerSupplyControlUnit)
@@ -44,7 +41,7 @@ using namespace chaos::cu::control_manager;
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit)
 
 /*Construct a new CU with an identifier*/
-::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::SCMultiChannelPowerSupplyControlUnit(const string &_control_unit_id,
+SCMultiChannelPowerSupplyControlUnit::SCMultiChannelPowerSupplyControlUnit(const string &_control_unit_id,
 			const string &_control_unit_param,const ControlUnitDriverList &_control_unit_drivers)
 :  chaos::cu::control_manager::SCAbstractControlUnit(_control_unit_id,
 			 _control_unit_param, _control_unit_drivers) {
@@ -63,14 +60,14 @@ PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::multichannelpowersupply::SCMul
 	} while (next != string::npos);
 }
 /*Base Destructor*/
-::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::~SCMultiChannelPowerSupplyControlUnit() {
+SCMultiChannelPowerSupplyControlUnit::~SCMultiChannelPowerSupplyControlUnit() {
 	if (multichannelpowersupply_drv) {
 		delete (multichannelpowersupply_drv);
 	}
 }
 //handlers
 //end handlers
-void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitDefineActionAndDataset()  {
+void SCMultiChannelPowerSupplyControlUnit::unitDefineActionAndDataset()  {
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdMPSDefault),true);
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdMPSsetChannelVoltage));
 	installCommand(BATCH_COMMAND_GET_DESCRIPTION(CmdMPSsetChannelCurrent));
@@ -299,10 +296,10 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 
 }
-void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitDefineCustomAttribute() {
+void SCMultiChannelPowerSupplyControlUnit::unitDefineCustomAttribute() {
 }
 // Abstract method for the initialization of the control unit
-void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitInit() {
+void SCMultiChannelPowerSupplyControlUnit::unitInit() {
 		char* chanNum=NULL, *slots=NULL, *auxPar=NULL, *showPar=NULL;
 		chanNum = getAttributeCache()->getRWPtr<char>(DOMAIN_OUTPUT, "channelsPerSlot"); 
 		chanNum=strncpy(chanNum,this->channelsPerSlotStr.c_str(),256);
@@ -330,7 +327,7 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 }
 // Abstract method for the start of the control unit
-void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStart() {
+void SCMultiChannelPowerSupplyControlUnit::unitStart() {
 		std::string deviceString;
 		const int32_t* kindOfGenerator=getAttributeCache()->getROPtr<int32_t>(DOMAIN_INPUT,"GeneratorBehaviour");
 		
@@ -376,17 +373,17 @@ void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 
 }
 // Abstract method for the stop of the control unit
-void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitStop()  {
+void SCMultiChannelPowerSupplyControlUnit::unitStop()  {
 }
 // Abstract method for deinit the control unit
-void ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitDeinit() {
+void SCMultiChannelPowerSupplyControlUnit::unitDeinit() {
 	SCCUAPP << "deinitializing ";
 }
 	//! restore the control unit to snapshot
 #define RESTORE_LAPP SCCUAPP << "[RESTORE-" <<getCUID() << "] "
 #define RESTORE_LERR SCCUERR << "[RESTORE-" <<getCUID() << "] "
 #define RESTORE_LDBG SCCUDBG << "[RESTORE-" << getCUID() << "] "
-bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache *const snapshot_cache)  {
+bool SCMultiChannelPowerSupplyControlUnit::unitRestoreToSnapshot(chaos::cu::control_manager::AbstractSharedDomainCache *const snapshot_cache)  {
 	uint64_t start_restore_time= chaos::common::utility::TimingUtil::getTimeStamp();
 	try
 	{
@@ -683,7 +680,7 @@ bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::un
 	}
 	return false;
 }
-uint32_t  ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getTotalChannels()
+uint32_t SCMultiChannelPowerSupplyControlUnit::getTotalChannels()
 {
 	const char* chanXSlot= getAttributeCache()->getROPtr<char>(DOMAIN_OUTPUT, "channelsPerSlot");
 	std::vector<int32_t> chanXSlotVector;
@@ -704,7 +701,7 @@ uint32_t  ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUni
 	return sum;
 }
 
-size_t ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::getLengthOfAuxParameter(std::string param,std::string& tipo)
+size_t SCMultiChannelPowerSupplyControlUnit::getLengthOfAuxParameter(std::string param,std::string& tipo)
 {
 	size_t ret=0;
 	Json::Value json_parameter;
@@ -825,7 +822,7 @@ namespace driver
 
 
 
-bool ::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit::waitOnCommandID(uint64_t cmd_id) 
+bool SCMultiChannelPowerSupplyControlUnit::waitOnCommandID(uint64_t cmd_id) 
 {
 	 ChaosUniquePtr<chaos::common::batch_command::CommandState> cmd_state;
 do { 
