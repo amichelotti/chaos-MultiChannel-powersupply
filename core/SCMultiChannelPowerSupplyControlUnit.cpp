@@ -238,12 +238,12 @@ void SCMultiChannelPowerSupplyControlUnit::unitDefineActionAndDataset()  {
 					theSubType=chaos::DataType::SUB_TYPE_INT32;
 					dimension=sizeof(int32_t);
 				}
-				else if (kindOf.find("int64")>=0)
+				else if (kindOf.find("int64") != std::string::npos)
 				{
 					theSubType=chaos::DataType::SUB_TYPE_INT64;
 					dimension=sizeof(int64_t);
 				}
-				else if (kindOf.find("int32")>=0)
+				else if (kindOf.find("int32") != std::string::npos)
 				{
 					theSubType=chaos::DataType::SUB_TYPE_INT32;
 					dimension=sizeof(int32_t);
@@ -737,12 +737,12 @@ size_t SCMultiChannelPowerSupplyControlUnit::getLengthOfAuxParameter(std::string
 					tipo="int32_t";
 					return sizeof(int32_t);
 				}
-				else if (kindOf.find("int64")>=0)
+				else if (kindOf.find("int64") != std::string::npos)
 				{
 					tipo="int64_t";
 					return sizeof(int64_t);
 				}
-				else if (kindOf.find("int32")>=0)
+				else if (kindOf.find("int32") != std::string::npos)
 				{
 					tipo="int32_t";
 					return  sizeof(int32_t);
@@ -851,6 +851,12 @@ break;
 case BatchCommandEventType::EVT_FAULT:
     SCCUAPP << cmd_id << " -> FAULT";
 break;
+case BatchCommandEventType::EVT_FATAL_FAULT:
+	SCCUAPP << cmd_id << " -> FATAL FAULT";
+	break;
+case BatchCommandEventType::EVT_DEQUEUE:
+	SCCUAPP << cmd_id << " -> DEQUEUE";
+	break;
 }
 usleep(500000);
 } while (cmd_state->last_event != BatchCommandEventType::EVT_COMPLETED &&

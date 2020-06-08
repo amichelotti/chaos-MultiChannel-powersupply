@@ -169,12 +169,12 @@ int32_t AbstractMultiChannelPowerSupplyCommand::outputRead() {
 					    tmpDPointer =getAttributeCache()->getRWPtr<double>(DOMAIN_OUTPUT,"Channel"+auxParamList[i]);
 						tmpDPointer[count]=tmpJson.asDouble();
 					}
-					else if (cmp.find("int32")>=0)
+					else if (cmp.find("int32")!=std::string::npos)
 					{
 						tmpIPointer =getAttributeCache()->getRWPtr<int32_t>(DOMAIN_OUTPUT,"Channel"+auxParamList[i]);
 						tmpIPointer[count]=tmpJson.asInt();
 					}
-					else if ((cmp.find("int64")>=0) || (cmp == "long"))
+					else if ((cmp.find("int64") != std::string::npos) || (cmp == "long"))
 					{
 						tmpLPointer =getAttributeCache()->getRWPtr<int64_t>(DOMAIN_OUTPUT,"Channel"+auxParamList[i]);
 						tmpLPointer[count]=tmpJson.asInt64();
