@@ -18,6 +18,7 @@ limitations under the License.
 */
 #include "AbstractMultiChannelPowerSupplyCommand.h"
 #include <boost/format.hpp>
+#include <json/json.h>
 #define CMDCUINFO_ INFO_LOG(AbstractMultiChannelPowerSupplyCommand)
 #define CMDCUDBG_ DBG_LOG(AbstractMultiChannelPowerSupplyCommand)
 #define CMDCUERR_ ERR_LOG(AbstractMultiChannelPowerSupplyCommand)
