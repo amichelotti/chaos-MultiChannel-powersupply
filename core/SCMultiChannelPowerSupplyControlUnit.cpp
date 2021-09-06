@@ -17,6 +17,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <stdint.h>
+#include <json/json.h>
 #include "SCMultiChannelPowerSupplyControlUnit.h"
 #include <common/powersupply/core/AbstractPowerSupply.h>
 
