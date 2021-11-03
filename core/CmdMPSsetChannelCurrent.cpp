@@ -51,7 +51,7 @@ void own::CmdMPSsetChannelCurrent::setHandler(c_data::CDataWrapper *data) {
 	
 	this->resolution=getAttributeCache()->getROPtr<double>(DOMAIN_INPUT, "SetResolution");
 	
-	if (::common::multichannelpowersupply::MPSGeneratorBehaviour::MPS_VOLTAGE_GENERATOR != (*this->kindOfGenerator))
+	if (::common::multichannelpowersupply::MPS_VOLTAGE_GENERATOR != (*this->kindOfGenerator))
 	{
 		setStateVariableSeverity(StateVariableTypeAlarmCU,"setPoint_not_reached", chaos::common::alarm::MultiSeverityAlarmLevelClear); 
 	}
