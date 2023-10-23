@@ -37,7 +37,20 @@ using namespace ::driver::multichannelpowersupply;
 #define SCCUAPP INFO_LOG(SCMultiChannelPowerSupplyControlUnit)
 #define SCCUDBG DBG_LOG(SCMultiChannelPowerSupplyControlUnit)
 #define SCCUERR ERR_LOG(SCMultiChannelPowerSupplyControlUnit)
-
+inline std::string trim_right_copy(const std::string& s, 
+								  const std::string& delimiters=" \f\n\r\t\v")
+								  {
+									  return s.substr(0,s.find_last_not_of(delimiters)+1);
+								  }
+inline std::string trim_left_copy(const std::string &s,
+ 								  const std::string& delimiters=" \f\n\r\t\v")
+								   {
+									   return s.substr(s.find_first_not_of(delimiters));
+								   }
+inline std::string trim_copy(const std::string &s, const std::string& delimiters=" \f\n\r\t\v")
+{
+	return trim_left_copy(trim_right_copy(s,delimiters),delimiters);
+}
 
 PUBLISHABLE_CONTROL_UNIT_IMPLEMENTATION(::driver::multichannelpowersupply::SCMultiChannelPowerSupplyControlUnit)
 
@@ -867,18 +880,5 @@ return (cmd_state.get() &&
 cmd_state->last_event == BatchCommandEventType::EVT_COMPLETED);
 
 }
-inline std::string trim_right_copy(const std::string& s, 
-								  const std::string& delimiters=" \f\n\r\t\v")
-								  {
-									  return s.substr(0,s.find_last_not_of(delimiters)+1);
-								  }
-inline std::string trim_left_copy(const std::string &s,
- 								  const std::string& delimiters=" \f\n\r\t\v")
-								   {
-									   return s.substr(s.find_first_not_of(delimiters));
-								   }
-inline std::string trim_copy(const std::string &s, const std::string& delimiters=" \f\n\r\t\v")
-{
-	return trim_left_copy(trim_right_copy(s,delimiters),delimiters);
-}
+
 
